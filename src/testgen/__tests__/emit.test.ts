@@ -3,12 +3,13 @@
  * escapes a template literal can silently eat (`\d` inside one is `d`) checked.
  */
 import * as ts from 'typescript';
-import { aloneTestSource, connectorTestSource, contractTestSource, journeySpecSource, playwrightConfigSource, SCHEMA_CHECK } from '../emit';
+import { aloneTestSource, angularAloneTestSource, connectorTestSource, contractTestSource, journeySpecSource, playwrightConfigSource, SCHEMA_CHECK } from '../emit';
 import { RECORDED_NETWORK } from '../harness';
 import { consoleKey } from '../pack';
 
 const files: Record<string, string> = {
   'alone.test.tsx': aloneTestSource('CargoManifest', 'http://localhost:5090'),
+  'alone.angular.test.ts': angularAloneTestSource('CargoManifest', 'http://localhost:5180'),
   'journeys.spec.ts': journeySpecSource('meridian-ops-cargo', 'http://localhost:5090'),
   'playwright.config.ts': playwrightConfigSource({ width: 1440, height: 900 }),
   'contract.test.ts': contractTestSource('meridian-ops-cargo'),
@@ -34,7 +35,25 @@ describe('generated sources', () => {
   });
 
   it('reads its data with fs, so no MFE needs resolveJsonModule', () => {
-    for (const name of ['alone.test.tsx', 'contract.test.ts', 'connector.contract.ts', 'spec.contract.ts']) expect(files[name]).not.toMatch(/^import \w+ from '[^']+\.json';/m);
+    for (const name of ['alone.test.tsx', 'alone.angular.test.ts', 'contract.test.ts', 'connector.contract.ts', 'spec.contract.ts']) expect(files[name]).not.toMatch(/^import \w+ from '[^']+\.json';/m);
+  });
+
+  it('renders each case with the props it was recorded with, in both lanes', () => {
+    expect(files['alone.test.tsx']).toContain('render(<CargoManifest {...(c.props ?? {})} />)');
+    expect(files['alone.angular.test.ts']).toContain('fixture.componentRef.setInput(name, value)');
+  });
+
+  it('renders an Angular capability with TestBed, and asserts what the React lane asserts', () => {
+    const a = files['alone.angular.test.ts'];
+    expect(a).toContain("import CargoManifest from './CargoManifest.component';");
+    expect(a).toContain('TestBed.configureTestingModule({ imports: [CargoManifest] })');
+    // Waits on a clock the frozen Date cannot stop.
+    expect(a).toContain('performance.now()');
+    expect(a).not.toContain('Date.now()');
+    for (const shared of ['expect(missing).toEqual([]);', 'expect(net.unexpected).toEqual([]);', 'c.calls.filter((call) => !net.calls.includes(call))', 'c.consoleErrors.some((known) => e.includes(known))']) {
+      expect(a).toContain(shared);
+      expect(files['alone.test.tsx']).toContain(shared);
+    }
   });
 
   it('names the capability and where its data lives', () => {

@@ -332,8 +332,15 @@ the selected one in a slot carrying the boundary stamp a shell's slot carries (#
   treats as infrastructure (never recorded, never replayed). The MFE's own calls go to its
   origin and are recorded by URL. It listens on 5180 by default, the port recordings name,
   so the journey spec replays against `test:host` without flags.
-- **Alone tests stay React's.** They render a component in jsdom. A capability of another
-  framework is held by its journey spec and its pack, and `TESTS.md` says so.
+- **Alone tests, in each framework's own test bed.** React's render through React Testing
+  Library; Angular's through TestBed under the MFE's jest-preset-angular, the standalone
+  component with each prop set by `setInput`. One case file, one recorded network, the same four
+  assertions (text, calls, no unexpected request, no new console error), and each case renders
+  with the props its route named, in both lanes. A framework with neither lane is held by its
+  journey spec and its pack, and `TESTS.md` says so.
+- **A server that is down keeps its contract.** `--upstream` answers an operation it cannot
+  reach from what the server returned last run, and says so, instead of dropping the test: a
+  regeneration had silently deleted cargo-ops' connector contracts.
 - The generated journey spec is `e2e/characterization.e2e.ts`, not `*.spec.ts`, which every
   Jest default `testMatch` collects and a developer's Jest config is theirs to keep.
 
@@ -342,8 +349,8 @@ each `container.init` a fresh share scope, so a remote mounted once and never ag
 keeps one for the page's life.
 
 On meridian-station, the three Angular MFEs (cargo-ops, docking-control, life-support) and
-React's concourse are recorded through the host from their production builds. Each MFE's
-suites pass, every pack passes in its slots, and a changed heading in cargo-ops' Angular
+React's concourse are recorded through the host from their production builds, every tier
+present in each. Each MFE's suites pass, every pack passes in its slots, and a changed heading in cargo-ops' Angular
 `HazardSummary` failed that capability in both browser tiers and nothing else.
 
 ## Boundaries

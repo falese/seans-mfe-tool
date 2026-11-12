@@ -11,42 +11,23 @@ import { BODY_HASH_SOURCE, GENERATED_MARK, JSDOM_NOISE } from './harness';
 
 const noise = `[${JSDOM_NOISE.map((r) => r.toString()).join(', ')}]`;
 
-/** Jest, per capability: rendered alone in jsdom, the network answered from the capture (§3). */
-export function aloneTestSource(capability: string, app: string): string {
-  return `/**
- * ${capability} — characterization, alone. ${GENERATED_MARK}.
- *
- * At each state ${app} was captured in, this capability is rendered on its own —
- * no host, no shell, no backend — with the network answered from the capture.
- * It must show what the captured app showed there, make the calls behind it,
- * and log no console error the captured app did not.
- *
- * The cases are data: ./__characterization__/${capability}.json. Re-run
- * test:generate after a new capture to refresh them. This file is yours once
- * written; test:generate leaves it alone after you change it.
- */
-import React from 'react';
-import { cleanup, render, waitFor } from '@testing-library/react';
-import { ${capability} } from './${capability}';
-import { installRecordedNetwork, missingText, type RecordedNetwork, type RecordedResponse } from '../../__smt__/recorded-network';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-
-// Read, not imported: an MFE's tsconfig need not allow JSON modules (an Angular spec config does not).
+const ALONE_DATA = `// Read, not imported: an MFE's tsconfig need not allow JSON modules (an Angular spec config does not).
 const json = <T,>(file: string): T => JSON.parse(readFileSync(join(__dirname, file), 'utf8')) as T;
-const recorded = json<Record<string, unknown>>('../../__smt__/recorded.json');
-const evidence = json<{ app: string; clock: string; cases: Array<{ step: string; path: string; regions: Array<{ region: string; text: string }>; calls: string[]; consoleErrors: string[] }> }>('./__characterization__/${capability}.json');
+const recorded = json<Record<string, unknown>>('../../__smt__/recorded.json');`;
+
+const aloneEvidence = (capability: string) =>
+  `const evidence = json<{ app: string; clock: string; cases: Array<{ step: string; path: string; regions: Array<{ region: string; text: string }>; calls: string[]; consoleErrors: string[]; props?: Record<string, string> }> }>('./__characterization__/${capability}.json');
 
 /** What jsdom logs and a browser never would. */
 const JSDOM_NOISE = ${noise};
-const TIMERS = ['hrtime', 'nextTick', 'performance', 'queueMicrotask', 'requestAnimationFrame', 'cancelAnimationFrame', 'requestIdleCallback', 'cancelIdleCallback', 'setImmediate', 'clearImmediate', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] as const;
+const TIMERS = ['hrtime', 'nextTick', 'performance', 'queueMicrotask', 'requestAnimationFrame', 'cancelAnimationFrame', 'requestIdleCallback', 'cancelIdleCallback', 'setImmediate', 'clearImmediate', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] as const;`;
 
-describe('${capability} — as captured', () => {
-  let net: RecordedNetwork;
+/** The capture's frozen clock, its network, and console errors collected: the same in every lane. */
+const ALONE_SETUP = `  let net: RecordedNetwork;
   let errors: string[];
   let spy: jest.SpyInstance;
 
-  beforeEach(() => {
+  const setUp = () => {
     // The capture's frozen clock; every other timer runs for real.
     jest.useFakeTimers({ now: new Date(evidence.clock), doNotFake: [...TIMERS] });
     net = installRecordedNetwork(recorded as unknown as Record<string, RecordedResponse>, { appOrigin: new URL(evidence.app).origin });
@@ -55,33 +36,131 @@ describe('${capability} — as captured', () => {
       const text = args.map(String).join(' ');
       if (!JSDOM_NOISE.some((n) => n.test(text))) errors.push(text);
     });
-  });
+  };
 
-  afterEach(() => {
-    cleanup();
+  const tearDown = () => {
     spy.mockRestore();
     net.restore();
     jest.useRealTimers();
+  };
+
+  /** Each region's text not shown, in order. */
+  const missingFrom = (page: string, c: (typeof evidence.cases)[number]) =>
+    c.regions.flatMap((r) => {
+      const m = missingText(page, r.text);
+      return m === null ? [] : [\`\${r.region}: "\${m}"\`];
+    });`;
+
+/** What every lane asserts once the capability shows its state. */
+const ALONE_ASSERT = `    expect(missing).toEqual([]);
+    expect(c.calls.filter((call) => !net.calls.includes(call))).toEqual([]);
+    expect(net.unexpected).toEqual([]);
+    expect(errors.filter((e) => !c.consoleErrors.some((known) => e.includes(known)))).toEqual([]);`;
+
+const aloneHeader = (capability: string, app: string, how: string) => `/**
+ * ${capability} — characterization, alone. ${GENERATED_MARK}.
+ *
+ * At each state ${app} was captured in, this capability is rendered on its own (${how}) —
+ * no host, no shell, no backend — with the props it was shown with and the network
+ * answered from the capture. It must show what the captured app showed there, make the
+ * calls behind it, and log no console error the captured app did not.
+ *
+ * The cases are data: ./__characterization__/${capability}.json. Re-run
+ * test:generate after a new capture to refresh them. This file is yours once
+ * written; test:generate leaves it alone after you change it.
+ */`;
+
+/** Jest, per capability: a React component rendered alone in jsdom, the network answered from the capture (§3). */
+export function aloneTestSource(capability: string, app: string): string {
+  return `${aloneHeader(capability, app, 'React Testing Library')}
+import React from 'react';
+import { cleanup, render, waitFor } from '@testing-library/react';
+import { ${capability} } from './${capability}';
+import { installRecordedNetwork, missingText, type RecordedNetwork, type RecordedResponse } from '../../__smt__/recorded-network';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+${ALONE_DATA}
+${aloneEvidence(capability)}
+
+describe('${capability} — as captured', () => {
+${ALONE_SETUP}
+
+  beforeEach(setUp);
+  afterEach(() => {
+    cleanup();
+    tearDown();
   });
 
   // waitFor's budget sits inside the test's, so a failure says what was missing rather than timing out.
   it.each(evidence.cases)('$step at $path', async (c) => {
     window.history.pushState({}, '', c.path);
-    const { container } = render(<${capability} />);
+    const { container } = render(<${capability} {...(c.props ?? {})} />);
+    let missing: string[] = [];
     await waitFor(
       () => {
-        const page = container.textContent ?? '';
-        const missing = c.regions.flatMap((r) => {
-          const m = missingText(page, r.text);
-          return m === null ? [] : [\`\${r.region}: "\${m}"\`];
-        });
+        missing = missingFrom(container.textContent ?? '', c);
         expect(missing).toEqual([]);
       },
       { timeout: 10_000 }
-    );
-    expect(c.calls.filter((call) => !net.calls.includes(call))).toEqual([]);
-    expect(net.unexpected).toEqual([]);
-    expect(errors.filter((e) => !c.consoleErrors.some((known) => e.includes(known)))).toEqual([]);
+    ).catch(() => undefined);
+${ALONE_ASSERT}
+  }, 20_000);
+});
+`;
+}
+
+/**
+ * Jest, per capability: an Angular standalone component rendered alone in jsdom by TestBed
+ * (jest-preset-angular, as the MFE's own specs run), the network answered from the capture (§3).
+ * The same data and the same assertions as the React lane.
+ */
+export function angularAloneTestSource(capability: string, app: string): string {
+  return `${aloneHeader(capability, app, 'Angular TestBed')}
+import { TestBed, type ComponentFixture } from '@angular/core/testing';
+import ${capability} from './${capability}.component';
+import { installRecordedNetwork, missingText, type RecordedNetwork, type RecordedResponse } from '../../__smt__/recorded-network';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+${ALONE_DATA}
+${aloneEvidence(capability)}
+
+/**
+ * Change detection until the capability shows its state, or the budget is spent. Timed by
+ * performance.now(): Date is the capture's frozen clock.
+ */
+async function settle(fixture: ComponentFixture<unknown>, missing: () => string[], budget: number): Promise<string[]> {
+  const end = performance.now() + budget;
+  for (;;) {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const left = missing();
+    if (left.length === 0 || performance.now() > end) return left;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+}
+
+describe('${capability} — as captured', () => {
+${ALONE_SETUP}
+
+  beforeEach(async () => {
+    setUp();
+    await TestBed.configureTestingModule({ imports: [${capability}] }).compileComponents();
+  });
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    tearDown();
+  });
+
+  it.each(evidence.cases)('$step at $path', async (c) => {
+    window.history.pushState({}, '', c.path);
+    const fixture = TestBed.createComponent(${capability});
+    for (const [name, value] of Object.entries(c.props ?? {})) fixture.componentRef.setInput(name, value);
+    const missing = await settle(fixture, () => missingFrom((fixture.nativeElement as HTMLElement).textContent ?? '', c), 10_000);
+${ALONE_ASSERT}
+    fixture.destroy();
   }, 20_000);
 });
 `;

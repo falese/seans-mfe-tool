@@ -66,6 +66,14 @@ export interface AloneCase {
   calls: string[];
   /** Console errors the baseline already had at this step: not new. */
   consoleErrors: string[];
+  /** The props it was shown with, from a hosted route (`/BerthTile?berthId=b2`, ADR-129 §13). */
+  props: Record<string, string>;
+}
+
+/** Props from a hosted route's query: `/BerthTile?berthId=b2` → `{ berthId: 'b2' }`. */
+export function routeProps(route: string): Record<string, string> {
+  const q = route.indexOf('?');
+  return q < 0 ? {} : Object.fromEntries(new URLSearchParams(route.slice(q + 1)).entries());
 }
 
 export interface CapabilityPlan {
@@ -142,7 +150,7 @@ export function planTests(evidence: Evidence, target: TestTarget): TestPlan {
         const planFor = capabilities.find((p) => p.capability === cap.name) as CapabilityPlan;
         if (!planFor.skipped && !seen.has(step.path)) {
           seen.add(step.path);
-          planFor.cases.push({ step: step.id, path: step.path, regions, calls, consoleErrors: errorsOf(step) });
+          planFor.cases.push({ step: step.id, path: step.path, regions, calls, consoleErrors: errorsOf(step), props: routeProps(step.path) });
         }
       }
       plan.steps.push({ id: step.id, action: j.actions[k] ?? { wait: 0 }, path: step.path, capabilities: caps, consoleErrors: errorsOf(step) });

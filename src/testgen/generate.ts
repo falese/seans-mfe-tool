@@ -4,7 +4,8 @@
  * Given an evidence bundle (ADR-109) of a running app and an MFE, writes into
  * the MFE:
  *
- *   src/features/<Cap>/<Cap>.characterization.test.tsx   each capability alone, in jsdom (§3)
+ *   src/features/<Cap>/<Cap>.characterization.test.tsx   each capability alone, in jsdom (§3) — React;
+ *     (.test.ts for Angular, by TestBed)
  *   src/features/<Cap>/__characterization__/<Cap>.json   its cases
  *   src/__smt__/recorded-network.ts, recorded.json        the harness and the capture's responses
  *   e2e/characterization.e2e.ts                          every journey: text, calls, console, pixels (§4)
@@ -30,7 +31,7 @@ import type { DSLManifest } from '@seans-mfe/dsl';
 import { bffOperations, readDecomposition, readSpecs, type Decomposition, type HoistRule, type OpenApiDocument } from '@seans-mfe/decompose';
 import { parseJourneys } from '../decompose/journeys';
 import { planContracts, upstreamRequests, type ContractPlan, type RecordedResponse } from './contract';
-import { aloneTestSource, connectorTestSource, contractTestSource, journeySpecSource, playwrightConfigSource, SCHEMA_CHECK } from './emit';
+import { aloneTestSource, angularAloneTestSource, connectorTestSource, contractTestSource, journeySpecSource, playwrightConfigSource, SCHEMA_CHECK } from './emit';
 import { GENERATED_MARK, RECORDED_NETWORK } from './harness';
 import { planTests, type Evidence, type EvidenceRequest, type EvidenceStep, type TestPlan, type TestTarget } from './plan';
 import { planPacks } from './pack';
@@ -202,6 +203,12 @@ export function manifestHoists(manifest: Manifest): Record<string, HoistRule[]> 
 }
 
 /** What the planner needs to know about the MFE, from its manifest and, when there is one, the proposal. */
+/** The jsdom lane an MFE's web build renders a capability alone in, by `resolveWebTarget` (ADR-092 §4). */
+function aloneLane(manifest: Manifest): { name: string; lane: 'react' | 'angular' | null } {
+  const { framework } = resolveWebTarget(manifest as unknown as DSLManifest);
+  return { name: framework, lane: framework === 'react' || framework === 'angular' ? framework : null };
+}
+
 export function testTarget(manifest: Manifest, doc?: Decomposition): TestTarget {
   const domain = doc?.domains.find((d) => d.mfe === manifest.name);
   const own = manifest.capabilities
@@ -210,10 +217,10 @@ export function testTarget(manifest: Manifest, doc?: Decomposition): TestTarget 
     .map(([name]) => name);
   const component = (name: string) => domain?.capabilities.find((c) => c.name === name)?.component ?? name;
   const repeated = new Map((doc?.repeated ?? []).map((r) => [r.capability, r.renderedBy]));
-  // Alone tests render React components in jsdom. Another framework's capability is held by
-  // the browser tiers, which mount it through the platform (ADR-129 §13).
-  const { framework } = resolveWebTarget(manifest as unknown as DSLManifest);
-  const otherFramework = framework !== 'react' ? `alone tests render React in jsdom; an ${framework} capability is held by its journey spec and its pack, recorded through the capability host` : null;
+  // Alone tests render a capability in jsdom with its framework's own test bed. A framework
+  // with no lane yet is held by the browser tiers, which mount it through the platform (§13).
+  const framework = aloneLane(manifest);
+  const otherFramework = framework.lane === null ? `no alone lane for ${framework.name} yet (React and Angular have one); its journey spec and its pack hold it, recorded through the capability host` : null;
   const capabilities = own.map((name) => {
     const by = repeated.get(name);
     const notAlone = by ? `drawn by ${by} once per item, with props only it has; its journey checks cover it` : otherFramework;
@@ -352,6 +359,14 @@ async function updatePackage(dir: string, hasBff: boolean, playwrightVersion: st
   if (JSON.stringify(pkg) !== before) await fs.writeFile(file, json(pkg));
 }
 
+/** The upstream answers the last run's contract recorded, by `GET <endpoint>`. */
+async function previousUpstream(dir: string): Promise<Record<string, RecordedResponse>> {
+  const file = path.join(dir, 'src', 'platform', 'bff', 'contract', 'recorded.json');
+  if (!(await fs.pathExists(file))) return {};
+  const doc = (await fs.readJson(file).catch(() => ({}))) as { operations?: Array<{ call: string; status: number; body: unknown }> };
+  return Object.fromEntries((doc.operations ?? []).map((o) => [o.call, { status: o.status, mimeType: 'application/json', body: o.body }]));
+}
+
 export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfeTests> {
   const dir = path.resolve(opts.mfeDir);
   const evidenceDir = path.resolve(opts.evidenceDir);
@@ -382,7 +397,8 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
     if (c.skipped) continue;
     const base = `src/features/${c.capability}`;
     await out.write(`${base}/__characterization__/${c.capability}.json`, json({ _comment: `${GENERATED_MARK}.`, app: plan.app, clock: plan.clock, cases: c.cases }));
-    await out.write(`${base}/${c.capability}.characterization.test.tsx`, aloneTestSource(c.capability, plan.app));
+    if (aloneLane(manifest).lane === 'angular') await out.write(`${base}/${c.capability}.characterization.test.ts`, angularAloneTestSource(c.capability, plan.app));
+    else await out.write(`${base}/${c.capability}.characterization.test.tsx`, aloneTestSource(c.capability, plan.app));
   }
 
   // §4 — journeys, with a baseline per capability per step.
@@ -419,12 +435,17 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
   const upstream: Record<string, RecordedResponse> = {};
   if (opts.upstream) {
     const get = opts.fetchUpstream ?? fetchJson;
+    // What each server answered last time: a server that is down now does not take its contract with it.
+    const previous = await previousUpstream(dir);
     for (const r of upstreamRequests(specs, { gateway })) {
       if (r.key in responses) continue;
       try {
         upstream[r.key] = await get(r.url);
       } catch (err) {
-        warnings.push(`upstream ${r.url}: ${err instanceof Error ? err.message : String(err)} — no contract test for ${r.key}`);
+        const why = err instanceof Error ? err.message : String(err);
+        const kept = previous[r.key];
+        if (kept) upstream[r.key] = kept;
+        warnings.push(`upstream ${r.url}: ${why} — ${kept ? 'kept what it answered last time' : 'no contract test'} for ${r.key}`);
       }
     }
   }

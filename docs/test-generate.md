@@ -38,15 +38,21 @@ Props ride the route: `goto: /#/BerthTile?berthId=b2` mounts BerthTile as the co
 in berth b2. Write those journeys by hand where a composition passes props. `test:run` runs each
 case only where the placement passes the props it was recorded with.
 
-| meridian-station, through the host | Jest | Contracts | Journeys | Packs in their slots |
+| meridian-station, through the host | Jest (alone states) | Contracts | Journeys | Packs in their slots |
 |---|---|---|---|---|
-| cargo-ops (Angular) | 43 → 53 | 26 → 35 | 7 / 7 | 5 / 5 |
-| docking-control (Angular) | 51 → 61 | 26 → 35 | 19 / 19 | 11 / 11, BerthTile once per berth |
-| life-support (Angular) | 44 → 52 | 20 → 27 | 13 / 13 | 7 / 7 |
-| concourse (React, production build) | 42 → 61 | 46 → 62 | 3 / 3 | 3 / 3 |
+| cargo-ops (Angular) | 43 → 56 (3) | 26 → 35 | 7 / 7 | 5 / 5 |
+| docking-control (Angular) | 51 → 71 (10, BerthTile once per berth) | 26 → 35 | 19 / 19 | 11 / 11 |
+| life-support (Angular) | 44 → 56 (4) | 20 → 27 | 13 / 13 | 7 / 7 |
+| concourse (React, production build) | 42 → 61 (2) | 46 → 62 | 3 / 3 | 3 / 3 |
 
-Alone tests render React in jsdom, so an Angular MFE has none. Its journey spec and its pack
-hold its capabilities instead, and `TESTS.md` says so.
+Every tier is the same in both frameworks. Alone tests render the capability in jsdom with its
+framework's own test bed: React Testing Library for React (`<Cap>.characterization.test.tsx`),
+Angular's TestBed under the MFE's jest-preset-angular for Angular
+(`<Cap>.characterization.test.ts`, the standalone component, each prop by `setInput`). Both
+read the same case data, render with the props the state was recorded with, answer the network
+from the same recording, and assert the same four things: the text, the calls behind it, no
+unexpected request, no new console error. A framework with neither lane says so in `TESTS.md`,
+and its journey spec and pack hold it.
 
 ## The journey file is the source
 
@@ -235,6 +241,9 @@ steps, then proposed, approved, scaffolded and ported with no edits, then `test:
   written, rather than replacing the suite with an empty one.
 - **Composed checks are text, not pixels.** A slot's layout is the host's. Each MFE's own
   journey spec holds its per-capability baselines.
+- **A server that is down keeps its contract.** With `--upstream`, an operation whose server
+  cannot be reached is answered from what it returned last run, and the run says so; it is not
+  dropped from the contract tests.
 - **Reads only.** Writes are not contract-tested: replaying a write against a stub proves nothing
   about it.
 - **Baselines belong to a machine.** Fonts and rasterisation differ between machines. Capture

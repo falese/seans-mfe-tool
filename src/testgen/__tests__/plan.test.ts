@@ -66,6 +66,15 @@ describe('planTests', () => {
     expect(plan.capabilities[0].cases[0].calls).toEqual(['GET /api/dockings']);
   });
 
+  it('carries the props a hosted route names, for the alone test to render with', () => {
+    expect(plan.capabilities[0].cases[0].props).toEqual({});
+    const hosted = planTests(
+      { ...evidence, journeys: [{ ...evidence.journeys[0], steps: evidence.journeys[0].steps.map((s) => ({ ...s, path: '/DockingBoard?berthId=b2' })) }] },
+      { mfe: 'docking', capabilities: [{ name: 'DockingBoard', component: 'DockingBoard' }], boundaries: [] }
+    );
+    expect(hosted.capabilities[0].cases[0].props).toEqual({ berthId: 'b2' });
+  });
+
   it('carries the console errors the baseline already had, so they are not new', () => {
     expect(plan.capabilities[0].cases[0].consoleErrors).toEqual(['known boom']);
   });

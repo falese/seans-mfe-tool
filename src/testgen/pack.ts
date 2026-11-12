@@ -15,7 +15,7 @@
  */
 
 import type { JourneyStep } from '../decompose/journeys';
-import type { RegionExpectation, TestPlan } from './plan';
+import { routeProps, type RegionExpectation, type TestPlan } from './plan';
 
 export interface PackStep {
   action: JourneyStep;
@@ -39,11 +39,7 @@ export interface PackCase {
   props: Record<string, string>;
 }
 
-/** Props from a hosted route's query: `/BerthTile?berthId=b2` → `{ berthId: 'b2' }`. */
-export function routeProps(route: string): Record<string, string> {
-  const q = route.indexOf('?');
-  return q < 0 ? {} : Object.fromEntries(new URLSearchParams(route.slice(q + 1)).entries());
-}
+export { routeProps };
 
 export interface CapabilityPack {
   mfe: string;

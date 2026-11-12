@@ -181,6 +181,18 @@ describe('generateTests', () => {
     expect(await fs.pathExists(baseline)).toBe(true);
   });
 
+  it('writes an Angular capability\'s alone test for TestBed, beside its component', async () => {
+    await fs.outputFile(
+      path.join(f.mfe, 'mfe-manifest.yaml'),
+      yaml.dump({ name: 'ops-docking', framework: 'angular', capabilities: [{ DockingBoard: { type: 'domain' } }, { load: { type: 'platform' } }] })
+    );
+    const r = await run();
+    expect(r.alone).toEqual([{ capability: 'DockingBoard', cases: 1 }]);
+    expect(r.written).toContain('src/features/DockingBoard/DockingBoard.characterization.test.ts');
+    expect(r.written).not.toContain('src/features/DockingBoard/DockingBoard.characterization.test.tsx');
+    expect(await fs.readFile(path.join(f.mfe, 'src/features/DockingBoard/DockingBoard.characterization.test.ts'), 'utf8')).toContain("import DockingBoard from './DockingBoard.component';");
+  });
+
   it('removes what it no longer generates, unless a developer changed it', async () => {
     await run();
     const baseline = path.join(f.mfe, 'e2e/characterization/baselines/tour-0-DockingBoard.png');
@@ -241,6 +253,21 @@ describe('generateTests --upstream', () => {
     expect(Object.keys(await fs.readJson(path.join(f.mfe, 'src/__smt__/recorded.json')))).toEqual(['POST /graphql']);
   });
 
+  it('keeps what a server answered last time when it cannot be reached now, rather than dropping its contract', async () => {
+    const f = await fixture(root);
+    await fs.writeJson(path.join(f.evidence, 'responses.json'), {});
+    const spec = path.join(f.mfe, 'specs', 'harbormaster.yaml');
+    const doc = yaml.load(await fs.readFile(spec, 'utf8')) as Record<string, unknown>;
+    await fs.writeFile(spec, yaml.dump({ ...doc, servers: [{ url: 'http://harbormaster-api:5101/api' }] }));
+    const up = async () => ({ status: 200, mimeType: 'application/json', body: [{ id: 'd9' }] });
+    const first = await generateTests({ mfeDir: f.mfe, evidenceDir: f.evidence, upstream: true, fetchUpstream: up });
+    expect(first.contract.operations).toBe(1);
+    const down = await generateTests({ mfeDir: f.mfe, evidenceDir: f.evidence, upstream: true, fetchUpstream: async () => Promise.reject(new Error('ECONNREFUSED')) });
+    expect(down.contract).toEqual({ operations: 1, unrecorded: [] });
+    expect(down.warnings).toEqual(['upstream http://harbormaster-api:5101/api/dockings: ECONNREFUSED — kept what it answered last time for GET /api/harbormaster/dockings']);
+    expect(down.removed).toEqual([]);
+  });
+
   it('says which server it could not reach, and goes on', async () => {
     const f = await fixture(root);
     await fs.writeJson(path.join(f.evidence, 'responses.json'), {});
@@ -288,10 +315,12 @@ describe('testTarget', () => {
     ]);
   });
 
-  it('renders capabilities alone only where the web build is React, and says why not elsewhere', () => {
-    const angular = testTarget({ name: 'cargo', framework: 'angular', capabilities: [{ CargoManifest: { type: 'domain' } }] });
-    expect(angular.capabilities[0].notAlone).toBe('alone tests render React in jsdom; an angular capability is held by its journey spec and its pack, recorded through the capability host');
-    expect(testTarget({ name: 'x', framework: 'react', capabilities: [{ A: { type: 'domain' } }] }).capabilities[0].notAlone).toBeUndefined();
-    expect(testTarget({ name: 'x', capabilities: [{ A: { type: 'domain' } }] }).capabilities[0].notAlone).toBeUndefined();
+  it('renders capabilities alone in React and Angular, and says why not in a framework with no lane', () => {
+    for (const framework of ['react', 'angular', undefined]) {
+      expect(testTarget({ name: 'x', framework, capabilities: [{ A: { type: 'domain' } }] }).capabilities[0].notAlone).toBeUndefined();
+    }
+    expect(testTarget({ name: 'x', framework: 'vue', capabilities: [{ A: { type: 'domain' } }] }).capabilities[0].notAlone).toBe(
+      'no alone lane for vue yet (React and Angular have one); its journey spec and its pack hold it, recorded through the capability host'
+    );
   });
 });
