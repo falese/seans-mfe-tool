@@ -1,0 +1,362 @@
+{
+  "POST /graphql": {
+    "body": {
+      "data": {
+        "listDockings": [
+          {
+            "dockingId": 4019,
+            "etaUtc": "2026-07-14T06:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4020,
+            "etaUtc": "2026-07-15T09:30:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4021,
+            "etaUtc": "2026-07-17T14:30:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "dockingId": 4022,
+            "etaUtc": "2026-07-17T20:15:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "dockingId": 4023,
+            "etaUtc": "2026-07-16T11:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4024,
+            "etaUtc": "2026-07-17T08:45:00.000Z",
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4025,
+            "etaUtc": "2026-07-18T07:10:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "dockingId": 4026,
+            "etaUtc": "2026-07-19T10:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4027,
+            "etaUtc": "2026-07-18T02:20:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4028,
+            "etaUtc": "2026-07-19T16:30:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4029,
+            "etaUtc": "2026-07-20T05:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4030,
+            "etaUtc": "2026-07-18T09:55:00.000Z",
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ],
+        "settlements": [
+          {
+            "merchantId": "ACC-7105",
+            "netCents": 2099500,
+            "status": "SETTLED"
+          },
+          {
+            "merchantId": "ACC-7106",
+            "netCents": 1406000,
+            "status": "SETTLED"
+          },
+          {
+            "merchantId": "ACC-7107",
+            "netCents": 608000,
+            "status": "HELD"
+          },
+          {
+            "merchantId": "ACC-7105",
+            "netCents": 361000,
+            "status": "OPEN"
+          }
+        ],
+        "stalls": [
+          {
+            "leaseCredits": 5400.5,
+            "stallNo": "A-18",
+            "vendorId": 105
+          },
+          {
+            "leaseCredits": 7200,
+            "stallNo": "A-22",
+            "vendorId": 106
+          },
+          {
+            "leaseCredits": 3950.75,
+            "stallNo": "B-04",
+            "vendorId": 107
+          },
+          {
+            "leaseCredits": 6100,
+            "stallNo": "B-11",
+            "vendorId": 108
+          },
+          {
+            "leaseCredits": 4800.25,
+            "stallNo": "A-03",
+            "vendorId": 109
+          },
+          {
+            "leaseCredits": 2900,
+            "stallNo": "B-19",
+            "vendorId": 110
+          }
+        ],
+        "vendors": [
+          {
+            "concourseZone": "CONCOURSE-A",
+            "cuisineOrCategory": "Noodles",
+            "licenseStatus": "ACTIVE",
+            "vendorId": 105,
+            "vendorName": "Red Dust Noodle Bar"
+          },
+          {
+            "concourseZone": "CONCOURSE-A",
+            "cuisineOrCategory": "Outfitters",
+            "licenseStatus": "ACTIVE",
+            "vendorId": 106,
+            "vendorName": "Orbit Outfitters"
+          },
+          {
+            "concourseZone": "CONCOURSE-B",
+            "cuisineOrCategory": "Coffee",
+            "licenseStatus": "PROBATION",
+            "vendorId": 107,
+            "vendorName": "Lagrange Coffee"
+          },
+          {
+            "concourseZone": "CONCOURSE-B",
+            "cuisineOrCategory": "Bar",
+            "licenseStatus": "ACTIVE",
+            "vendorId": 108,
+            "vendorName": "The Vacuum Lounge"
+          },
+          {
+            "concourseZone": "CONCOURSE-A",
+            "cuisineOrCategory": "Pharmacy",
+            "licenseStatus": "ACTIVE",
+            "vendorId": 109,
+            "vendorName": "Ring B Pharmacy"
+          },
+          {
+            "concourseZone": "CONCOURSE-B",
+            "cuisineOrCategory": "Convenience",
+            "licenseStatus": "SUSPENDED",
+            "vendorId": 110,
+            "vendorName": "Starlight Sundries"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST /graphql #40f72c9a": {
+    "body": {
+      "data": {
+        "listDockings": [
+          {
+            "dockingId": 4019,
+            "etaUtc": "2026-07-14T06:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4020,
+            "etaUtc": "2026-07-15T09:30:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4021,
+            "etaUtc": "2026-07-17T14:30:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "dockingId": 4022,
+            "etaUtc": "2026-07-17T20:15:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "dockingId": 4023,
+            "etaUtc": "2026-07-16T11:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4024,
+            "etaUtc": "2026-07-17T08:45:00.000Z",
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4025,
+            "etaUtc": "2026-07-18T07:10:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "dockingId": 4026,
+            "etaUtc": "2026-07-19T10:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4027,
+            "etaUtc": "2026-07-18T02:20:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4028,
+            "etaUtc": "2026-07-19T16:30:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4029,
+            "etaUtc": "2026-07-20T05:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4030,
+            "etaUtc": "2026-07-18T09:55:00.000Z",
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ],
+        "settlements": [
+          {
+            "merchantId": "ACC-7105",
+            "netCents": 2099500,
+            "status": "SETTLED"
+          },
+          {
+            "merchantId": "ACC-7106",
+            "netCents": 1406000,
+            "status": "SETTLED"
+          },
+          {
+            "merchantId": "ACC-7107",
+            "netCents": 608000,
+            "status": "HELD"
+          },
+          {
+            "merchantId": "ACC-7105",
+            "netCents": 361000,
+            "status": "OPEN"
+          }
+        ],
+        "stalls": [
+          {
+            "leaseCredits": 5400.5,
+            "stallNo": "A-18",
+            "vendorId": 105
+          },
+          {
+            "leaseCredits": 7200,
+            "stallNo": "A-22",
+            "vendorId": 106
+          },
+          {
+            "leaseCredits": 3950.75,
+            "stallNo": "B-04",
+            "vendorId": 107
+          },
+          {
+            "leaseCredits": 6100,
+            "stallNo": "B-11",
+            "vendorId": 108
+          },
+          {
+            "leaseCredits": 4800.25,
+            "stallNo": "A-03",
+            "vendorId": 109
+          },
+          {
+            "leaseCredits": 2900,
+            "stallNo": "B-19",
+            "vendorId": 110
+          }
+        ],
+        "vendors": [
+          {
+            "concourseZone": "CONCOURSE-A",
+            "cuisineOrCategory": "Noodles",
+            "licenseStatus": "ACTIVE",
+            "vendorId": 105,
+            "vendorName": "Red Dust Noodle Bar"
+          },
+          {
+            "concourseZone": "CONCOURSE-A",
+            "cuisineOrCategory": "Outfitters",
+            "licenseStatus": "ACTIVE",
+            "vendorId": 106,
+            "vendorName": "Orbit Outfitters"
+          },
+          {
+            "concourseZone": "CONCOURSE-B",
+            "cuisineOrCategory": "Coffee",
+            "licenseStatus": "PROBATION",
+            "vendorId": 107,
+            "vendorName": "Lagrange Coffee"
+          },
+          {
+            "concourseZone": "CONCOURSE-B",
+            "cuisineOrCategory": "Bar",
+            "licenseStatus": "ACTIVE",
+            "vendorId": 108,
+            "vendorName": "The Vacuum Lounge"
+          },
+          {
+            "concourseZone": "CONCOURSE-A",
+            "cuisineOrCategory": "Pharmacy",
+            "licenseStatus": "ACTIVE",
+            "vendorId": 109,
+            "vendorName": "Ring B Pharmacy"
+          },
+          {
+            "concourseZone": "CONCOURSE-B",
+            "cuisineOrCategory": "Convenience",
+            "licenseStatus": "SUSPENDED",
+            "vendorId": 110,
+            "vendorName": "Starlight Sundries"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  }
+}

@@ -1,0 +1,11 @@
+# Crawled from http://localhost:5006 by seans-mfe-tool test:crawl (ADR-129 §9): 1 state(s), 1 interaction(s).
+# One journey per interaction, each replayable from the start. Edit freely: change what is filled,
+# remove what is not worth testing, rename journeys. test:generate records these and writes the tests.
+journeys:
+  - name: crawl-000
+    steps:
+      - goto: /
+  - name: crawl-001
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 MarketDirectory"s]
