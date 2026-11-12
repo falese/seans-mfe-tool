@@ -6,12 +6,40 @@ showed at each step, the calls behind it, the console and a screenshot. That rec
 specification, and the tests hold the MFE to it.
 
 ```bash
+# an MFE you built: record its journey file against it running, and generate
+# (with no journeys.yaml, it crawls the MFE and writes one first)
+seans-mfe-tool test:generate ./my-mfe --url http://localhost:5008 --upstream
+
+# just the journey file: every control in every state, one journey per interaction
+seans-mfe-tool test:crawl http://localhost:5008 --out ./my-mfe/journeys.yaml
+
 # every MFE of a ported decomposition
 seans-mfe-tool test:generate ./evidence/proposal --proposal
 
-# one MFE, from any capture of an app it is part of
+# from a capture you already have
 seans-mfe-tool test:generate ./my-mfe --evidence ./evidence
 ```
+
+## The journey file is the source
+
+What the UI tests cover is `journeys.yaml`, in the journey DSL (`goto`, `click`, `fill`, `press`,
+`wait`). Write it by hand, or let `test:crawl` write it: it opens the running MFE, finds every
+control a person can operate by role and accessible name, performs each one in each state it is
+offered in, and walks every new state, up to `--max` interactions. Each interaction is one
+journey that replays on its own:
+
+```yaml
+journeys:
+  - name: crawl-002
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+```
+
+Edit the crawled file freely (add `fill` steps, drop what is not worth holding, rename) and
+commit it. `test:generate --url` records it and regenerates the tests; the recording itself is
+not kept unless you pass `--record-to`. On meridian-arrivals the crawl finds 2 states and 4
+interactions, and the recording gives 5 journeys, 11 checks and 11 baselines.
 
 ## What it writes
 

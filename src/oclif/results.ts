@@ -545,6 +545,8 @@ export interface GeneratedMfeTestsSummary {
   written: string[];
   /** Files left as a developer changed them. */
   kept: string[];
+  /** Files a previous run wrote that this one no longer generates, removed. */
+  removed: string[];
   /** What could not be generated, with why. */
   warnings: string[];
   /** The MFE's TESTS.md. */
@@ -554,4 +556,16 @@ export interface GeneratedMfeTestsSummary {
 export interface TestGenerateResult {
   evidence: string;
   mfes: GeneratedMfeTestsSummary[];
+}
+
+/** What test:crawl found and wrote (ADR-129 §9). */
+export interface TestCrawlResult {
+  url: string;
+  /** The journey file written. */
+  out: string;
+  states: number;
+  interactions: number;
+  journeys: number;
+  /** True when --max ended the crawl before every control was tried. */
+  truncated: boolean;
 }

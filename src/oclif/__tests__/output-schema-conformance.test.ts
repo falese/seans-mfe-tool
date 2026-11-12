@@ -115,6 +115,7 @@ const NO_FIXTURE: Record<string, string> = {
   'decompose:present': 'needs a proposal and a captured evidence bundle with screenshots, which no fixture commits — rendering runs in src/decompose/propose/__tests__/present.test.ts',
   'decompose:scaffold': 'needs an approved decomposition.yaml, which no fixture commits — the whole scaffold runs on the reference monolith in src/decompose/scaffold/__tests__/scaffold.test.ts',
   'decompose:port': 'needs an approved, scaffolded proposal, which no fixture commits — the whole port runs on the reference monolith in src/decompose/port/__tests__/port.test.ts',
+  'test:crawl': 'needs a running MFE to crawl, which no fixture serves — the walk runs in src/testgen/__tests__/crawl.test.ts and the page half in crawl-page.test.ts',
   'test:generate': 'needs a captured evidence bundle, which no fixture commits — what it writes is exercised in src/testgen/__tests__/generate.test.ts against a bundle built there',
   'decompose:verify': 'needs a captured evidence bundle (and a running app, or a second bundle), which no fixture commits — the comparison runs in src/decompose/verify/__tests__/parity.test.ts',
 };

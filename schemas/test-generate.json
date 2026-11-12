@@ -14,6 +14,27 @@
         "type": "string",
         "description": "The evidence bundle (default with --proposal: the bundle holding the proposal)"
       },
+      "url": {
+        "type": "string",
+        "description": "Record the MFE running here: its journey file is driven and the tests generated from what it did. With no journey file, the MFE is crawled first and one written"
+      },
+      "journeys": {
+        "type": "string",
+        "description": "With --url, the journey file to record (default: <mfe>/journeys.yaml)"
+      },
+      "record-to": {
+        "type": "string",
+        "description": "With --url, keep the recording (an evidence bundle) here (default: a temporary directory)"
+      },
+      "clock": {
+        "type": "string",
+        "description": "With --url, freeze the page clock at this ISO-8601 time (default: now, to the minute)"
+      },
+      "viewport": {
+        "type": "string",
+        "description": "With --url, the viewport as WxH",
+        "default": "1440x900"
+      },
       "proposal": {
         "type": "boolean",
         "description": "TARGET is a proposal directory: generate for every MFE of its scaffolded fleet"
@@ -66,6 +87,7 @@
             "migrated",
             "written",
             "kept",
+            "removed",
             "warnings",
             "report"
           ],
@@ -232,6 +254,13 @@
                 "type": "string"
               },
               "description": "Files left as a developer changed them."
+            },
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Files a previous run wrote that this one no longer generates, removed."
             },
             "warnings": {
               "type": "array",

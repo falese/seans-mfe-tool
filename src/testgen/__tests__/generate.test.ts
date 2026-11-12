@@ -166,6 +166,24 @@ describe('generateTests', () => {
     expect(await fs.readFile(test, 'utf8')).not.toContain('// mine');
   });
 
+  it('removes what it no longer generates, unless a developer changed it', async () => {
+    await run();
+    const baseline = path.join(f.mfe, 'e2e/characterization/baselines/tour-0-DockingBoard.png');
+    const cases = path.join(f.mfe, 'src/features/DockingBoard/__characterization__/DockingBoard.json');
+    expect(await fs.pathExists(baseline)).toBe(true);
+    // The capability leaves the manifest: its tests and baselines are no longer generated.
+    await fs.outputFile(path.join(f.mfe, 'mfe-manifest.yaml'), yaml.dump({ name: 'ops-docking', capabilities: [{ load: { type: 'platform' } }] }));
+    await fs.appendFile(cases, ' ');
+    const again = await run();
+    expect(await fs.pathExists(baseline)).toBe(false);
+    expect(again.removed).toEqual(expect.arrayContaining(['e2e/characterization/baselines/tour-0-DockingBoard.png']));
+    // Changed by hand, so kept, and said so.
+    expect(await fs.pathExists(cases)).toBe(true);
+    expect(again.kept).toContain('src/features/DockingBoard/__characterization__/DockingBoard.json');
+    const owned = (await fs.readJson(path.join(f.mfe, '.smt/tests.json'))) as { files: Record<string, string> };
+    expect(owned.files['e2e/characterization/baselines/tour-0-DockingBoard.png']).toBeUndefined();
+  });
+
   it('refreshes what is still as generated when the capture changes', async () => {
     await run();
     const responses = path.join(f.evidence, 'responses.json');

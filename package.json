@@ -136,7 +136,7 @@
         "description": "Where a directory stands in an SMT flow — what is done, stale or waiting on a person, and the next command (PDR-012)"
       },
       "test": {
-        "description": "Generated tests — characterization, journey, visual and contract tests from what a running app was observed to do (PDR-014)"
+        "description": "Generated tests — crawl a running MFE into a journey file, record it, and generate characterization, journey, visual and contract tests from what it did (PDR-014)"
       }
     },
     "hooks": {

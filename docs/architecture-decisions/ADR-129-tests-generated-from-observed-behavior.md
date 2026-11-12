@@ -24,6 +24,10 @@ implemented-by:
   - src/testgen/png.ts
   - src/testgen/generate.ts
   - src/commands/test/generate.ts
+  - src/commands/test/crawl.ts
+  - src/testgen/crawl.ts
+  - src/testgen/crawl-page.ts
+  - src/testgen/record.ts
   - src/decompose/bundle.ts
   - src/decompose/capture.ts
   - packages/decompose/src/bff-plan.ts
@@ -35,6 +39,8 @@ verified-by:
   - src/testgen/__tests__/contract.test.ts
   - src/testgen/__tests__/png.test.ts
   - src/testgen/__tests__/generate.test.ts
+  - src/testgen/__tests__/crawl.test.ts
+  - src/testgen/__tests__/crawl-page.test.ts
   - src/decompose/__tests__/bundle.test.ts
   - src/decompose/__tests__/capture.test.ts
   - packages/decompose/src/__tests__/bff-plan.test.ts
@@ -182,6 +188,25 @@ updated baseline survives (`--force` replaces it). `package.json` is only added 
 `test:generate <proposal> --proposal` writes `proposal/tests.json` with provenance over
 `decomposition.yaml` and the capture's `requests.json` (ADR-119), and is the `tests` step after
 `port`.
+
+### 9. The journey file is the source of the UI tests
+
+What an MFE's UI tests cover is a journey file in the journey DSL (`goto`, `click`, `fill`,
+`press`, `wait`; ADR-109 §5), committed beside the manifest as `journeys.yaml`. It has two
+authors:
+
+- **A person** writes or edits it: the interactions worth holding, the inputs to fill.
+- **The crawler** writes it: `test:crawl <url>` opens the running MFE and finds every operable
+  control by role and accessible name. It performs each control in each state it is offered in,
+  and walks every new state it reaches, breadth first, up to a budget. Each interaction becomes
+  one journey that replays on its own from the start, addressed by an exact role selector.
+  Selectors that do not resolve to exactly one element on the live page are dropped, so the
+  file names nothing the runner cannot find.
+
+`test:generate <mfe> --url <url>` records the journey file against the running MFE and generates
+the tests from the recording. With no journey file it crawls first and writes one. The recording
+is a means, not an artifact: the journey file and the generated tests are what is committed.
+`--evidence` still generates from an existing bundle, as decomposition does.
 
 ## Boundaries
 

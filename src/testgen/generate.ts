@@ -80,6 +80,8 @@ export interface GeneratedMfeTests {
   written: string[];
   /** Files left alone because a developer changed them. */
   kept: string[];
+  /** Files a previous run wrote that this one no longer generates, removed. */
+  removed: string[];
   /** What could not be generated, with why. */
   warnings: string[];
   report: string;
@@ -97,6 +99,8 @@ interface Ownership {
 class OwnedWriter {
   readonly written: string[] = [];
   readonly kept: string[] = [];
+  readonly removed: string[] = [];
+  private readonly touched = new Set<string>();
   private constructor(private readonly dir: string, private readonly owned: Ownership, private readonly force: boolean) {}
 
   static async open(dir: string, force: boolean): Promise<OwnedWriter> {
@@ -108,6 +112,7 @@ class OwnedWriter {
   async write(rel: string, content: string | Buffer): Promise<void> {
     const full = path.join(this.dir, rel);
     const next = sha(content);
+    this.touched.add(rel);
     if ((await fs.pathExists(full)) && !this.force) {
       const current = sha(await fs.readFile(full));
       if (current !== next && current !== this.owned.files[rel]) {
@@ -122,6 +127,23 @@ class OwnedWriter {
   }
 
   async close(): Promise<void> {
+    // What a previous run wrote and this one did not is no longer generated: removed while it is
+    // still as written, kept (and said so) once a developer has changed it.
+    for (const rel of Object.keys(this.owned.files)) {
+      if (this.touched.has(rel)) continue;
+      const full = path.join(this.dir, rel);
+      if (!(await fs.pathExists(full))) {
+        delete this.owned.files[rel];
+        continue;
+      }
+      if (this.force || sha(await fs.readFile(full)) === this.owned.files[rel]) {
+        await fs.remove(full);
+        delete this.owned.files[rel];
+        this.removed.push(rel);
+      } else {
+        this.kept.push(rel);
+      }
+    }
     const file = path.join(this.dir, OWNERSHIP);
     await fs.ensureDir(path.dirname(file));
     const files = Object.fromEntries(Object.entries(this.owned.files).sort(([a], [b]) => a.localeCompare(b)));
@@ -432,6 +454,7 @@ export async function generateTests(opts: GenerateOptions): Promise<GeneratedMfe
     migrated,
     written: out.written,
     kept: out.kept,
+    removed: out.removed,
     warnings,
     report: path.join(dir, 'TESTS.md'),
   };
