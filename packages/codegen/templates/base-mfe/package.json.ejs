@@ -13,6 +13,7 @@
     "bff:dev": "ts-node server.ts",
     "build:server": "tsc server.ts --module commonjs --esModuleInterop --skipLibCheck --target ES2022 --moduleResolution node --outDir .",
     "mesh:validate": "mesh validate",
+    "test:contract": "mesh build && jest --testRegex 'contract/[^/]+\\.contract\\.ts$'",
 <%_ } _%>
     "test": "jest",
     "lint": "eslint src --ext .ts,.tsx"

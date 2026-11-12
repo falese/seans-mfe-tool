@@ -1,4 +1,5 @@
-import { BUSY_MS, CODE_TYPES, COMPOSITION_PENDING, performStep, replayAnswer } from '../capture';
+import { BUSY_MS, CODE_TYPES, COMPOSITION_PENDING, isGraphqlPost, performStep, replayAnswer } from '../capture';
+import { bodyKey } from '../bundle';
 
 const page = (click: () => Promise<void>) =>
   ({ click, goto: jest.fn(), fill: jest.fn(), press: jest.fn(), waitForTimeout: jest.fn() }) as unknown as Parameters<typeof performStep>[0];
@@ -36,6 +37,19 @@ describe('replayAnswer', () => {
   it('answers a recorded call from the recording, and an unrecorded one with a 404 it reports', () => {
     expect(replayAnswer('GET', 'http://localhost:4100/api/tags', 'http://localhost:4100', recorded)).toEqual({ kind: 'fulfill', status: 200, mimeType: 'application/json', body: '{"tags":["x"]}', miss: false });
     expect(replayAnswer('GET', 'http://localhost:4100/api/user', 'http://localhost:4100', recorded)).toMatchObject({ kind: 'fulfill', status: 404, miss: true });
+  });
+  it('answers a GraphQL request from the response recorded for its document (ADR-129)', () => {
+    const graphql = {
+      'POST /graphql': { status: 200, mimeType: 'application/json', body: { data: { a: 1 } } },
+      [bodyKey('POST', '/graphql', '{"query":"{ b }"}')]: { status: 200, mimeType: 'application/json', body: { data: { b: 2 } } },
+    };
+    expect(replayAnswer('POST', 'http://localhost:5008/graphql', 'http://localhost:5008', graphql, '{"query":"{ b }"}')).toMatchObject({ body: '{"data":{"b":2}}' });
+    expect(replayAnswer('POST', 'http://localhost:5008/graphql', 'http://localhost:5008', graphql, '{"query":"{ a }"}')).toMatchObject({ body: '{"data":{"a":1}}' });
+  });
+  it('keeps the document of any GraphQL request, the app’s own origin included', () => {
+    expect(isGraphqlPost('POST', 'http://localhost:5008/graphql')).toBe(true);
+    expect(isGraphqlPost('GET', 'http://localhost:5008/graphql')).toBe(false);
+    expect(isGraphqlPost('POST', 'http://localhost:5008/api/x')).toBe(false);
   });
   it('lets the dev server’s own traffic through: it is never recorded, so a 404 would be a new error (#442)', () => {
     expect(replayAnswer('GET', 'http://localhost:4100/sockjs-node/info?t=1', 'http://localhost:4100', recorded)).toEqual({ kind: 'continue' });

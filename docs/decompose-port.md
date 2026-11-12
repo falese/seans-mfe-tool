@@ -114,4 +114,5 @@ Getting here fixed, along the way:
 - **Domains load overlapping data.** The shell and docking both load berths, dockings and charges.
   That is the cost of each deploying alone; the parity report counts every repeat.
 - **The shell knows the route table** (`shell/src/routes.ts`) until routing proper (#423).
-- **Behavior in a different shell** is proved only by each MFE's own tests (#418, PDR-013).
+- **Behavior in a different shell** is proved by each MFE's own tests, which `test:generate` writes
+  from the capture ([test-generate](./test-generate.md), PDR-013, PDR-014).

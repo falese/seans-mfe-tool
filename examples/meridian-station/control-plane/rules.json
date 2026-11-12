@@ -89,6 +89,13 @@
                 "emoji": "🍜",
                 "color": "#d64570",
                 "blurb": "Vendors, stalls, settlements"
+              },
+              {
+                "id": "arrivals",
+                "title": "Arrivals Desk",
+                "emoji": "🛳️",
+                "color": "#2f8fb5",
+                "blurb": "Vessels, operators, passengers"
               }
             ]
           }
@@ -424,6 +431,48 @@
           "capability": "DockingSimulation",
           "props": {
             "slot": "meridian-console/main"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "registration": {
+      "name": "meridian-arrivals",
+      "version": "1.0.0",
+      "type": "remote",
+      "baseUrl": "http://localhost:5008",
+      "capabilities": [
+        "load",
+        "render"
+      ],
+      "contentType": "module-federation",
+      "remoteEntryUrl": "http://localhost:5008/remoteEntry.js",
+      "moduleFederation": {
+        "scope": "meridian_arrivals",
+        "module": "./App"
+      }
+    },
+    "routes": [
+      {
+        "when": {
+          "stateKey": "meridian.open.arrivals"
+        },
+        "resolve": {
+          "capability": "VesselRegistry",
+          "props": {
+            "slot": "meridian-console/main"
+          }
+        }
+      },
+      {
+        "when": {
+          "stateKey": "meridian.open.arrivals"
+        },
+        "resolve": {
+          "capability": "PassengerManifest",
+          "props": {
+            "slot": "meridian-console/status"
           }
         }
       }

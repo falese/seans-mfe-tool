@@ -6,7 +6,7 @@
 
 # Interface: ModuleFederationAdaptorOptions
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:387](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L387)
+Defined in: [packages/runtime/src/layout-adaptors.ts:394](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L394)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/runtime/src/layout-adaptors.ts:387](https://github.com/fal
 
 > `optional` **allowedOrigins**: readonly `string`[]
 
-Defined in: [packages/runtime/src/layout-adaptors.ts:394](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L394)
+Defined in: [packages/runtime/src/layout-adaptors.ts:401](https://github.com/falese/seans-mfe-tool/blob/main/packages/runtime/src/layout-adaptors.ts#L401)
 
 Origins this shell loads remotes from, e.g. `['https://mfe.example.com']`.
 The shell's own origin is always allowed. Omit to load from anywhere,

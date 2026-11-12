@@ -68,7 +68,8 @@
     "testEnvironment": "jsdom",
     "setupFilesAfterEnv": ["@testing-library/jest-dom"],
     "moduleNameMapper": {
-      "\\.(css|less|scss|svg|png|jpg)$": "<rootDir>/__mocks__/fileMock.js"
+      "\\.(css|less|scss|svg|png|jpg)$": "<rootDir>/__mocks__/fileMock.js",
+      "^@babylonjs/(.*)$": "<rootDir>/__mocks__/babylonjs.js"
     },
     "transform": {
       "^.+\\.(ts|tsx)$": ["ts-jest", { "tsconfig": "tsconfig.json" }]

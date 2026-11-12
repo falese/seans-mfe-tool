@@ -27,6 +27,7 @@ export type {
 export type { MutatingResult, PlannedChange } from '@seans-mfe/contracts';
 import type { MutatingResult } from '@seans-mfe/contracts';
 import type { ProposalStatus } from '@seans-mfe/decompose';
+import type { RunReport } from '../testgen/run';
 
 // ---------------------------------------------------------------------------
 // api
@@ -521,4 +522,67 @@ export interface FlowStatusResult {
   summary: string;
   /** The proposal as the workspace reads it (ADR-116 §3); only with `--proposal`. */
   proposal?: FlowProposalStatus;
+}
+
+// ---------------------------------------------------------------------------
+// test:generate (PDR-014, ADR-129)
+// ---------------------------------------------------------------------------
+
+/** What test:generate wrote into one MFE. */
+export interface GeneratedMfeTestsSummary {
+  mfe: string;
+  dir: string;
+  /** Capabilities with an alone (jsdom) test, and how many captured states each covers. */
+  alone: Array<{ capability: string; cases: number }>;
+  /** Capabilities with no alone test, and why. */
+  skipped: Array<{ capability: string; reason: string }>;
+  /** The Playwright journey spec: journeys, per-step capability checks, visual baselines. */
+  journeys: { journeys: number; checks: number; baselines: number };
+  /** BFF operations with a contract test, and those no recording covers. */
+  contract: { operations: number; unrecorded: string[] };
+  /** The monolith's tests: moved (keep), replaced by characterization (rewrite), dropped (discard). */
+  migrated: { kept: string[]; rewritten: Array<{ file: string; reasons: string[] }>; discarded: Array<{ file: string; reasons: string[] }> };
+  /** Files written, relative to the MFE. */
+  written: string[];
+  /** Files left as a developer changed them. */
+  kept: string[];
+  /** Files a previous run wrote that this one no longer generates, removed. */
+  removed: string[];
+  /** What could not be generated, with why. */
+  warnings: string[];
+  /** The MFE's TESTS.md. */
+  report: string;
+}
+
+export interface TestGenerateResult {
+  evidence: string;
+  mfes: GeneratedMfeTestsSummary[];
+}
+
+/** What test:crawl found and wrote (ADR-129 §9). */
+export interface TestCrawlResult {
+  url: string;
+  /** The journey file written. */
+  out: string;
+  states: number;
+  interactions: number;
+  journeys: number;
+  /** True when --max ended the crawl before every control was tried. */
+  truncated: boolean;
+}
+
+/** test:run: a composition's MFEs' tests, run together (ADR-129 §12). */
+export interface TestRunResult {
+  project: string;
+  ok: boolean;
+  report: { json: string; markdown: string };
+  summary: RunReport;
+}
+
+/** test:host — the capability host it served (ADR-129 §13). */
+export interface TestHostResult {
+  mfe: string;
+  url: string;
+  capabilities: string[];
+  remoteEntryUrl: string;
 }

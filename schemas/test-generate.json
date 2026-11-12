@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/test:generate.json",
+  "title": "test:generate",
+  "description": "Generate an MFE's tests from an evidence bundle of the running app: each capability alone in jsdom, every journey in Playwright with per-capability visual baselines, and contract tests for its BFF (ADR-129).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "string",
+        "description": "An MFE directory, or with --proposal a decomposition's proposal directory (every MFE of its fleet)"
+      },
+      "evidence": {
+        "type": "string",
+        "description": "The evidence bundle (default with --proposal: the bundle holding the proposal)"
+      },
+      "host": {
+        "type": "boolean",
+        "description": "Record the MFE through the capability host: each capability mounted by the platform, as a shell mounts it, in any framework (ADR-129 §13)"
+      },
+      "remote": {
+        "type": "string",
+        "description": "With --host, the origin the MFE is served from (default: its manifest's remoteEntry)"
+      },
+      "port": {
+        "type": "string",
+        "description": "With --host, the port to serve the host on: the journey spec replays against test:host there",
+        "default": 5180
+      },
+      "url": {
+        "type": "string",
+        "description": "Record the MFE running here: its journey file is driven and the tests generated from what it did. With no journey file, the MFE is crawled first and one written"
+      },
+      "journeys": {
+        "type": "string",
+        "description": "With --url, the journey file to record (default: <mfe>/journeys.yaml)"
+      },
+      "record-to": {
+        "type": "string",
+        "description": "With --url, keep the recording (an evidence bundle) here (default: a temporary directory)"
+      },
+      "clock": {
+        "type": "string",
+        "description": "With --url, freeze the page clock at this ISO-8601 time (default: now, to the minute)"
+      },
+      "viewport": {
+        "type": "string",
+        "description": "With --url, the viewport as WxH",
+        "default": "1440x900"
+      },
+      "proposal": {
+        "type": "boolean",
+        "description": "TARGET is a proposal directory: generate for every MFE of its scaffolded fleet"
+      },
+      "fleet": {
+        "type": "string",
+        "description": "With --proposal, the fleet (default: what decompose:scaffold recorded)"
+      },
+      "app-dir": {
+        "type": "string",
+        "description": "The monolith's source, for moving its kept tests (default: what decompose:analyze recorded)"
+      },
+      "force": {
+        "type": "boolean",
+        "description": "Replace generated files a developer has changed"
+      },
+      "upstream": {
+        "type": "boolean",
+        "description": "Record each BFF spec operation the capture has no response for from its server, for the contract tests (an MFE read through its BFF shows the browser only the BFF)"
+      }
+    },
+    "required": [
+      "target"
+    ],
+    "x-positional": [
+      "target"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "evidence",
+      "mfes"
+    ],
+    "properties": {
+      "evidence": {
+        "type": "string"
+      },
+      "mfes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "mfe",
+            "dir",
+            "alone",
+            "skipped",
+            "journeys",
+            "contract",
+            "migrated",
+            "written",
+            "kept",
+            "removed",
+            "warnings",
+            "report"
+          ],
+          "properties": {
+            "mfe": {
+              "type": "string"
+            },
+            "dir": {
+              "type": "string"
+            },
+            "alone": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "capability",
+                  "cases"
+                ],
+                "properties": {
+                  "capability": {
+                    "type": "string"
+                  },
+                  "cases": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "description": "Capabilities with an alone (jsdom) test, and how many captured states each covers."
+            },
+            "skipped": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "capability",
+                  "reason"
+                ],
+                "properties": {
+                  "capability": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "description": "Capabilities with no alone test, and why."
+            },
+            "journeys": {
+              "type": "object",
+              "required": [
+                "journeys",
+                "checks",
+                "baselines"
+              ],
+              "properties": {
+                "journeys": {
+                  "type": "number"
+                },
+                "checks": {
+                  "type": "number"
+                },
+                "baselines": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false,
+              "description": "The Playwright journey spec: journeys, per-step capability checks, visual baselines."
+            },
+            "contract": {
+              "type": "object",
+              "required": [
+                "operations",
+                "unrecorded"
+              ],
+              "properties": {
+                "operations": {
+                  "type": "number"
+                },
+                "unrecorded": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "description": "BFF operations with a contract test, and those no recording covers."
+            },
+            "migrated": {
+              "type": "object",
+              "required": [
+                "kept",
+                "rewritten",
+                "discarded"
+              ],
+              "properties": {
+                "kept": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rewritten": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "file",
+                      "reasons"
+                    ],
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "reasons": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "discarded": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "file",
+                      "reasons"
+                    ],
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "reasons": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "description": "The monolith's tests: moved (keep), replaced by characterization (rewrite), dropped (discard)."
+            },
+            "written": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Files written, relative to the MFE."
+            },
+            "kept": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Files left as a developer changed them."
+            },
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Files a previous run wrote that this one no longer generates, removed."
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "What could not be generated, with why."
+            },
+            "report": {
+              "type": "string",
+              "description": "The MFE's TESTS.md."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

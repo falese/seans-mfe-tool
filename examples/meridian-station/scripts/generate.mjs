@@ -27,6 +27,7 @@ const MFES = [
   { name: 'meridian-cargo-ops', framework: 'angular', port: 5004 },
   { name: 'meridian-crew-services', framework: 'react', port: 5005 },
   { name: 'meridian-concourse', framework: 'react', port: 5006 },
+  { name: 'meridian-arrivals', framework: 'react', port: 5008 },
 ];
 
 const args = new Set(process.argv.slice(2));
@@ -41,7 +42,8 @@ for (const mfe of MFES) {
       process.exit(1);
     }
     console.log(`── remote:init ${mfe.name} (${mfe.framework}:${mfe.port}) ──`);
-    run(cli, ['remote:init', mfe.name, '--framework', mfe.framework, '--port', String(mfe.port), '--skip-install'], station);
+    // remote:init installs nothing (its --skip-install flag is gone); install per MFE as STATION-DEMO.md says.
+    run(cli, ['remote:init', mfe.name, '--framework', mfe.framework, '--port', String(mfe.port), '--host', 'meridian'], station);
   }
   console.log(`── remote:generate ${mfe.name} ──`);
   run(cli, ['remote:generate'], dir);

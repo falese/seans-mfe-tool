@@ -47,8 +47,9 @@ cd examples/meridian-station/<mfe>
 npm install --legacy-peer-deps --no-audit --no-fund
 rm -rf node_modules/@seans-mfe-tool/runtime
 cp -r ../../../dist/runtime node_modules/@seans-mfe-tool/runtime
-npx rspack build            # React MFEs (console, crew-services, concourse, shell)
+npx rspack build            # React MFEs (console, crew-services, concourse, arrivals, shell)
 npx ng build --configuration production   # Angular MFEs
+npx mesh build              # every MFE with a BFF: server.ts imports ./.mesh
 
 # 3. Boot everything (APIs seed themselves; logs land in /tmp/meridian-logs)
 ./scripts/dev-up.sh
@@ -68,6 +69,7 @@ npx ng build --configuration production   # Angular MFEs
 ./scripts/open.sh cargo          # the flagship split-document CargoManifest + HazardSummary
 ./scripts/open.sh crew           # CrewRoster + PayStatus (MCP-built MFE)
 ./scripts/open.sh concourse      # MarketDirectory — three conventions, one screen
+./scripts/open.sh arrivals       # VesselRegistry → main, PassengerManifest → status (tests generated, ADR-129)
 ./scripts/dock.sh b3             # re-fire one keyed berth tile (ADR-069)
 ```
 

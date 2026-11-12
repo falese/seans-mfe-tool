@@ -1,0 +1,111 @@
+name: meridian-arrivals
+version: 1.0.0
+type: remote
+language: typescript
+framework: react
+bundler: rspack
+description: Meridian Station arrivals desk — vessel registry with operator standing, passenger manifests by arrival
+owner: meridian-station
+tags: [meridian, arrivals, vessels, passengers, react]
+category: services
+
+# The shells this MFE works in, by control-plane namespace (ADR-107).
+hosts:
+  - id: meridian
+
+endpoint: http://localhost:5008
+remoteEntry: http://localhost:5008/remoteEntry.js
+discovery: http://localhost:5008/.well-known/mfe-manifest.yaml
+
+capabilities:
+  - VesselRegistry:
+      type: domain
+      description: Every registered vessel — Harbormaster registry and docking status, StellarLedger operator standing and balance
+  - PassengerManifest:
+      type: domain
+      description: StationOS passengers grouped by the Harbormaster docking they arrived on, with cabin class and clearance
+
+  - Load:
+      type: platform
+      lifecycle:
+        before:
+          - onLoadBegin:
+              handler: onLoadBegin
+              description: Log load lifecycle entry
+        after:
+          - onLoadComplete:
+              handler: onLoadComplete
+              description: Log load success and available components
+        error:
+          - onLoadError:
+              handler: onLoadError
+              contained: true
+              description: Log load failure
+
+  - Render:
+      type: platform
+      lifecycle:
+        before:
+          - onRenderBegin:
+              handler: onRenderBegin
+              description: Log render lifecycle entry
+        after:
+          - onRenderComplete:
+              handler: onRenderComplete
+              description: Log render success
+        error:
+          - onRenderError:
+              handler: onRenderError
+              contained: true
+              description: Log render failure
+
+# THREE-source BFF over the three resources no other MFE reads: Harbormaster
+# vessels (bare snake_case arrays), StationOS passengers (PascalCase pages),
+# StellarLedger accounts (camelCase cursor envelopes). The cross-system puns:
+# DockingNo 4025 <-> docking_id 4025; a vessel's operator_name <-> an account's
+# displayName (there is no shared id — the mess is the point, PDR-007).
+data:
+  sources:
+    - name: Harbormaster
+      handler:
+        openapi:
+          source: ./specs/harbormaster.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+            X-Request-ID: '{context.requestId}'
+    - name: StationOS
+      handler:
+        openapi:
+          source: ./specs/station-os.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+            X-Request-ID: '{context.requestId}'
+      transforms:
+        - hoistField:
+            - typeName: Query
+              pathConfig: [GetPassengers, Data]
+              newFieldName: passengers
+    - name: StellarLedger
+      handler:
+        openapi:
+          source: ./specs/stellar-ledger.yaml
+          operationHeaders:
+            Authorization: 'Bearer {context.jwt}'
+            X-Request-ID: '{context.requestId}'
+      transforms:
+        - hoistField:
+            - typeName: Query
+              pathConfig: [listAccounts, result]
+              newFieldName: accounts
+  mockSwitch:
+    enabled: true
+  serve:
+    endpoint: /graphql
+    playground: true
+
+dependencies:
+  runtime:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  design-system:
+    "@mui/material": ^5.14.0

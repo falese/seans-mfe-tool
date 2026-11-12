@@ -37,6 +37,36 @@ const ledger: OpenApiDocument = {
 };
 
 describe('reading through the BFF (ADR-127 §2)', () => {
+  it('takes the hoists a BFF is actually configured with, when given', () => {
+    // Inferred, the envelope's list is hoisted to its own field; a BFF configured without that hoist asks for it in place.
+    const [none] = bffOperations(ledger, 'ledger', { gateway: true }, []);
+    expect(none.hoist).toBeUndefined();
+    expect(none.document).toContain('r: listCharges { result { chargeId amount_cents: amountCents } meta { cursor hasMore } }');
+    const [named] = bffOperations(ledger, 'ledger', { gateway: true }, [{ typeName: 'Query', pathConfig: ['listCharges', 'result'], newFieldName: 'ledgerCharges' }]);
+    expect(named.hoist).toEqual({ prop: 'result', field: 'ledgerCharges' });
+  });
+
+  it('names each root field as the BFF exposes it: the naming convention applies to operation ids too', () => {
+    const harbormaster: OpenApiDocument = {
+      openapi: '3.0.3',
+      info: { title: 'harbormaster', version: '1' },
+      paths: {
+        '/vessels': {
+          get: {
+            operationId: 'list_vessels',
+            responses: { '200': { description: 'ok', content: { 'application/json': { schema: { type: 'array', items: { type: 'object', properties: { vessel_name: { type: 'string' } } } } } } } },
+          },
+        },
+      },
+    };
+    const [op] = bffOperations(harbormaster, 'harbormaster', { gateway: true });
+    expect(op.field).toBe('listVessels');
+    expect(op.document).toBe('query { r: listVessels { vessel_name: vesselName } }');
+    const [read] = bffReads(harbormaster, 'harbormaster', { gateway: true });
+    expect(read.field).toBe('listVessels');
+    expect(read.document).toBe('query { listVessels { vesselName } }');
+  });
+
   it('camel-cases names as the naming-convention transform does', () => {
     expect(['berth_id', 'Data', 'MetricValue', 'eta_utc', 'HTTPStatus', 'level_2', 'id'].map(graphqlName)).toEqual([
       'berthId', 'data', 'metricValue', 'etaUtc', 'httpStatus', 'level_2', 'id',

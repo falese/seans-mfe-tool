@@ -1,0 +1,598 @@
+{
+  "POST http://localhost:5003/graphql": {
+    "body": {
+      "data": {
+        "modules": [
+          {
+            "deckZone": "RING-A",
+            "moduleId": 1,
+            "moduleName": "Docking Ring A",
+            "moduleType": "DOCKING"
+          },
+          {
+            "deckZone": "HAB-2",
+            "moduleId": 2,
+            "moduleName": "Habitat Block 2",
+            "moduleType": "HABITAT"
+          },
+          {
+            "deckZone": "RING-B",
+            "moduleId": 3,
+            "moduleName": "Life Support Ring B",
+            "moduleType": "LIFE_SUPPORT"
+          },
+          {
+            "deckZone": "CONCOURSE-A",
+            "moduleId": 4,
+            "moduleName": "Concourse A",
+            "moduleType": "CONCOURSE"
+          },
+          {
+            "deckZone": "CORE",
+            "moduleId": 5,
+            "moduleName": "Power Core",
+            "moduleType": "POWER"
+          },
+          {
+            "deckZone": "HAB-3",
+            "moduleId": 6,
+            "moduleName": "Habitat Block 3",
+            "moduleType": "HABITAT"
+          }
+        ],
+        "telemetry": [
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "O2_PARTIAL_PRESSURE",
+            "metricValue": 21.2,
+            "moduleId": 3,
+            "readingId": 91001,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "CO2_PPM",
+            "metricValue": 640,
+            "moduleId": 3,
+            "readingId": 91002,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 21.5,
+            "moduleId": 3,
+            "readingId": 91003,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "PRESSURE_KPA",
+            "metricValue": 101.1,
+            "moduleId": 3,
+            "readingId": 91004,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "O2_PARTIAL_PRESSURE",
+            "metricValue": 20.9,
+            "moduleId": 2,
+            "readingId": 91005,
+            "recordedAtUtc": "2026-07-18T05:41:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "CO2_PPM",
+            "metricValue": 480,
+            "moduleId": 2,
+            "readingId": 91006,
+            "recordedAtUtc": "2026-07-18T05:41:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 22.1,
+            "moduleId": 2,
+            "readingId": 91007,
+            "recordedAtUtc": "2026-07-18T05:41:00.000Z"
+          },
+          {
+            "alertLevel": "CRITICAL",
+            "metricKind": "CO2_PPM",
+            "metricValue": 1180,
+            "moduleId": 6,
+            "readingId": 91008,
+            "recordedAtUtc": "2026-07-18T05:42:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "O2_PARTIAL_PRESSURE",
+            "metricValue": 20.1,
+            "moduleId": 6,
+            "readingId": 91009,
+            "recordedAtUtc": "2026-07-18T05:42:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "TEMP_C",
+            "metricValue": 23.9,
+            "moduleId": 6,
+            "readingId": 91010,
+            "recordedAtUtc": "2026-07-18T05:42:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "PRESSURE_KPA",
+            "metricValue": 100.8,
+            "moduleId": 1,
+            "readingId": 91011,
+            "recordedAtUtc": "2026-07-18T05:43:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 19.4,
+            "moduleId": 1,
+            "readingId": 91012,
+            "recordedAtUtc": "2026-07-18T05:43:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 22.8,
+            "moduleId": 4,
+            "readingId": 91013,
+            "recordedAtUtc": "2026-07-18T05:44:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "CO2_PPM",
+            "metricValue": 720,
+            "moduleId": 4,
+            "readingId": 91014,
+            "recordedAtUtc": "2026-07-18T05:44:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "POWER_KW",
+            "metricValue": 8420,
+            "moduleId": 5,
+            "readingId": 91015,
+            "recordedAtUtc": "2026-07-18T05:45:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "TEMP_C",
+            "metricValue": 31.2,
+            "moduleId": 5,
+            "readingId": 91016,
+            "recordedAtUtc": "2026-07-18T05:45:00.000Z"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5003/graphql #0647a724": {
+    "body": {
+      "data": {
+        "modules": [
+          {
+            "deckZone": "RING-A",
+            "moduleId": 1,
+            "moduleName": "Docking Ring A",
+            "moduleType": "DOCKING"
+          },
+          {
+            "deckZone": "HAB-2",
+            "moduleId": 2,
+            "moduleName": "Habitat Block 2",
+            "moduleType": "HABITAT"
+          },
+          {
+            "deckZone": "RING-B",
+            "moduleId": 3,
+            "moduleName": "Life Support Ring B",
+            "moduleType": "LIFE_SUPPORT"
+          },
+          {
+            "deckZone": "CONCOURSE-A",
+            "moduleId": 4,
+            "moduleName": "Concourse A",
+            "moduleType": "CONCOURSE"
+          },
+          {
+            "deckZone": "CORE",
+            "moduleId": 5,
+            "moduleName": "Power Core",
+            "moduleType": "POWER"
+          },
+          {
+            "deckZone": "HAB-3",
+            "moduleId": 6,
+            "moduleName": "Habitat Block 3",
+            "moduleType": "HABITAT"
+          }
+        ],
+        "telemetry": [
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "O2_PARTIAL_PRESSURE",
+            "metricValue": 21.2,
+            "moduleId": 3,
+            "readingId": 91001,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "CO2_PPM",
+            "metricValue": 640,
+            "moduleId": 3,
+            "readingId": 91002,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 21.5,
+            "moduleId": 3,
+            "readingId": 91003,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "PRESSURE_KPA",
+            "metricValue": 101.1,
+            "moduleId": 3,
+            "readingId": 91004,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "O2_PARTIAL_PRESSURE",
+            "metricValue": 20.9,
+            "moduleId": 2,
+            "readingId": 91005,
+            "recordedAtUtc": "2026-07-18T05:41:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "CO2_PPM",
+            "metricValue": 480,
+            "moduleId": 2,
+            "readingId": 91006,
+            "recordedAtUtc": "2026-07-18T05:41:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 22.1,
+            "moduleId": 2,
+            "readingId": 91007,
+            "recordedAtUtc": "2026-07-18T05:41:00.000Z"
+          },
+          {
+            "alertLevel": "CRITICAL",
+            "metricKind": "CO2_PPM",
+            "metricValue": 1180,
+            "moduleId": 6,
+            "readingId": 91008,
+            "recordedAtUtc": "2026-07-18T05:42:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "O2_PARTIAL_PRESSURE",
+            "metricValue": 20.1,
+            "moduleId": 6,
+            "readingId": 91009,
+            "recordedAtUtc": "2026-07-18T05:42:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "TEMP_C",
+            "metricValue": 23.9,
+            "moduleId": 6,
+            "readingId": 91010,
+            "recordedAtUtc": "2026-07-18T05:42:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "PRESSURE_KPA",
+            "metricValue": 100.8,
+            "moduleId": 1,
+            "readingId": 91011,
+            "recordedAtUtc": "2026-07-18T05:43:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 19.4,
+            "moduleId": 1,
+            "readingId": 91012,
+            "recordedAtUtc": "2026-07-18T05:43:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 22.8,
+            "moduleId": 4,
+            "readingId": 91013,
+            "recordedAtUtc": "2026-07-18T05:44:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "CO2_PPM",
+            "metricValue": 720,
+            "moduleId": 4,
+            "readingId": 91014,
+            "recordedAtUtc": "2026-07-18T05:44:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "POWER_KW",
+            "metricValue": 8420,
+            "moduleId": 5,
+            "readingId": 91015,
+            "recordedAtUtc": "2026-07-18T05:45:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "TEMP_C",
+            "metricValue": 31.2,
+            "moduleId": 5,
+            "readingId": 91016,
+            "recordedAtUtc": "2026-07-18T05:45:00.000Z"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5003/graphql #44cdbe9e": {
+    "body": {
+      "data": {
+        "telemetry": [
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "O2_PARTIAL_PRESSURE",
+            "metricValue": 21.2,
+            "moduleId": 3,
+            "readingId": 91001,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "CO2_PPM",
+            "metricValue": 640,
+            "moduleId": 3,
+            "readingId": 91002,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 21.5,
+            "moduleId": 3,
+            "readingId": 91003,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "PRESSURE_KPA",
+            "metricValue": 101.1,
+            "moduleId": 3,
+            "readingId": 91004,
+            "recordedAtUtc": "2026-07-18T05:40:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "O2_PARTIAL_PRESSURE",
+            "metricValue": 20.9,
+            "moduleId": 2,
+            "readingId": 91005,
+            "recordedAtUtc": "2026-07-18T05:41:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "CO2_PPM",
+            "metricValue": 480,
+            "moduleId": 2,
+            "readingId": 91006,
+            "recordedAtUtc": "2026-07-18T05:41:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 22.1,
+            "moduleId": 2,
+            "readingId": 91007,
+            "recordedAtUtc": "2026-07-18T05:41:00.000Z"
+          },
+          {
+            "alertLevel": "CRITICAL",
+            "metricKind": "CO2_PPM",
+            "metricValue": 1180,
+            "moduleId": 6,
+            "readingId": 91008,
+            "recordedAtUtc": "2026-07-18T05:42:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "O2_PARTIAL_PRESSURE",
+            "metricValue": 20.1,
+            "moduleId": 6,
+            "readingId": 91009,
+            "recordedAtUtc": "2026-07-18T05:42:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "TEMP_C",
+            "metricValue": 23.9,
+            "moduleId": 6,
+            "readingId": 91010,
+            "recordedAtUtc": "2026-07-18T05:42:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "PRESSURE_KPA",
+            "metricValue": 100.8,
+            "moduleId": 1,
+            "readingId": 91011,
+            "recordedAtUtc": "2026-07-18T05:43:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 19.4,
+            "moduleId": 1,
+            "readingId": 91012,
+            "recordedAtUtc": "2026-07-18T05:43:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "TEMP_C",
+            "metricValue": 22.8,
+            "moduleId": 4,
+            "readingId": 91013,
+            "recordedAtUtc": "2026-07-18T05:44:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "CO2_PPM",
+            "metricValue": 720,
+            "moduleId": 4,
+            "readingId": 91014,
+            "recordedAtUtc": "2026-07-18T05:44:00.000Z"
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "metricKind": "POWER_KW",
+            "metricValue": 8420,
+            "moduleId": 5,
+            "readingId": 91015,
+            "recordedAtUtc": "2026-07-18T05:45:00.000Z"
+          },
+          {
+            "alertLevel": "WATCH",
+            "metricKind": "TEMP_C",
+            "metricValue": 31.2,
+            "moduleId": 5,
+            "readingId": 91016,
+            "recordedAtUtc": "2026-07-18T05:45:00.000Z"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5003/graphql #47e0ae99": {
+    "body": {
+      "data": {
+        "modules": [
+          {
+            "deckZone": "RING-A",
+            "moduleId": 1,
+            "moduleName": "Docking Ring A"
+          },
+          {
+            "deckZone": "HAB-2",
+            "moduleId": 2,
+            "moduleName": "Habitat Block 2"
+          },
+          {
+            "deckZone": "RING-B",
+            "moduleId": 3,
+            "moduleName": "Life Support Ring B"
+          },
+          {
+            "deckZone": "CONCOURSE-A",
+            "moduleId": 4,
+            "moduleName": "Concourse A"
+          },
+          {
+            "deckZone": "CORE",
+            "moduleId": 5,
+            "moduleName": "Power Core"
+          },
+          {
+            "deckZone": "HAB-3",
+            "moduleId": 6,
+            "moduleName": "Habitat Block 3"
+          }
+        ],
+        "telemetry": [
+          {
+            "alertLevel": "NOMINAL",
+            "moduleId": 3
+          },
+          {
+            "alertLevel": "WATCH",
+            "moduleId": 3
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "moduleId": 3
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "moduleId": 3
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "moduleId": 2
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "moduleId": 2
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "moduleId": 2
+          },
+          {
+            "alertLevel": "CRITICAL",
+            "moduleId": 6
+          },
+          {
+            "alertLevel": "WATCH",
+            "moduleId": 6
+          },
+          {
+            "alertLevel": "WATCH",
+            "moduleId": 6
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "moduleId": 1
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "moduleId": 1
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "moduleId": 4
+          },
+          {
+            "alertLevel": "WATCH",
+            "moduleId": 4
+          },
+          {
+            "alertLevel": "NOMINAL",
+            "moduleId": 5
+          },
+          {
+            "alertLevel": "WATCH",
+            "moduleId": 5
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  }
+}

@@ -47,6 +47,21 @@ test('cargo: the split document shows its valuation gap', async ({ page }) => {
   await expect(page.getByText('Hazardous Cargo Aboard')).toBeVisible();
 });
 
+test('arrivals: vessels with their operator\'s standing, passengers by arrival', async ({ page }) => {
+  await page.getByText('Arrivals Desk').click();
+  // One action, two rules: the registry into main, the manifest into the status rail.
+  const registry = page.locator('[data-smt-capability="VesselRegistry"]');
+  const manifest = page.locator('[data-smt-capability="PassengerManifest"]');
+  await expect(registry.getByText('Vessel Registry')).toBeVisible({ timeout: 30_000 });
+  await expect(manifest.getByText('Passenger Manifest')).toBeVisible({ timeout: 30_000 });
+  // Harbormaster vessels joined to StellarLedger accounts by operator name.
+  await expect(registry.getByText('8 vessels · 2 with a delinquent operator')).toBeVisible({ timeout: 15_000 });
+  await expect(registry.locator('tr', { hasText: 'Cinder Hauler' }).getByText('DELINQUENT')).toBeVisible();
+  // StationOS passengers grouped by the Harbormaster docking they arrived on.
+  await expect(manifest.getByText('DCK-004025 · VR-91102')).toBeVisible();
+  await expect(manifest.getByText('6 cleared · 1 flagged · 1 pending')).toBeVisible();
+});
+
 test('crew: roster joins StationOS identity with ledger payroll', async ({ page }) => {
   await page.getByText('Crew Services').click();
   await expect(page.getByText('Crew Roster')).toBeVisible({ timeout: 30_000 });

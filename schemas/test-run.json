@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/test:run.json",
+  "title": "test:run",
+  "description": "Run every MFE of a composition's tests together: each MFE's own suites, then — in the running shell — each action fired, each placement checked in its slot, and each placed capability's pack run there (ADR-129).",
+  "input": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The project: holds control-plane/control-plane.yaml and rules.json"
+      },
+      "suites": {
+        "type": "string",
+        "description": "Comma-separated: unit, contract, composed",
+        "default": "unit,contract,composed"
+      },
+      "shell-url": {
+        "type": "string",
+        "description": "The running shell, for the composed suite",
+        "default": "http://localhost:5000"
+      },
+      "daemon": {
+        "type": "string",
+        "description": "The control plane's daemon, which relays actions to the shell",
+        "default": "http://localhost:4504"
+      },
+      "mfe": {
+        "type": "string",
+        "description": "Only these MFEs' own suites (comma-separated manifest names); the composed suite still runs the whole composition"
+      },
+      "out": {
+        "type": "string",
+        "description": "Where the report is written (default: <project>/test-results/test-run)"
+      }
+    },
+    "required": [
+      "project"
+    ],
+    "x-positional": [
+      "project"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "project",
+      "ok",
+      "report",
+      "summary"
+    ],
+    "properties": {
+      "project": {
+        "type": "string"
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "report": {
+        "type": "object",
+        "required": [
+          "json",
+          "markdown"
+        ],
+        "properties": {
+          "json": {
+            "type": "string"
+          },
+          "markdown": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "summary": {
+        "type": "object",
+        "required": [
+          "project",
+          "ok",
+          "mfes",
+          "composed"
+        ],
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "mfes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "mfe",
+                "dir",
+                "unit",
+                "contract"
+              ],
+              "properties": {
+                "mfe": {
+                  "type": "string"
+                },
+                "dir": {
+                  "type": [
+                    "null",
+                    "string"
+                  ],
+                  "description": "The MFE's directory, relative to the project; null for a placement with none (a second build)."
+                },
+                "unit": {},
+                "contract": {}
+              },
+              "additionalProperties": false
+            }
+          },
+          "composed": {}
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

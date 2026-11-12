@@ -8,6 +8,7 @@ mfes:
   - meridian-crew-services
   - meridian-concourse
   - meridian-docking-simulation
+  - meridian-arrivals
   # Not a meridian MFE: abc-kids' flappy, built and deployed by that project.
   # Meridian places it on a context change without owning or rebuilding it —
   # the platform's claim that a domain feature composes into any shell.
@@ -56,6 +57,11 @@ routes:
               emoji: 🍜
               color: '#d64570'
               blurb: Vendors, stalls, settlements
+            - id: arrivals
+              title: Arrivals Desk
+              emoji: 🛳️
+              color: '#2f8fb5'
+              blurb: Vessels, operators, passengers
   # Context change: the crew goes off shift, and the console's work area swaps
   # from station operations to another application's game.
   - when: meridian.off-shift
@@ -112,6 +118,12 @@ routes:
     place:
       - capability: MarketDirectory
         into: meridian-console/main
+  - when: meridian.open.arrivals
+    place:
+      - capability: VesselRegistry
+        into: meridian-console/main
+      - capability: PassengerManifest
+        into: meridian-console/status
   - when: meridian.open.docking-simulation
     place:
       - capability: DockingSimulation

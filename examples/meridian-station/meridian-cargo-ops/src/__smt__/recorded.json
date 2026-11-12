@@ -1,0 +1,512 @@
+{
+  "POST http://localhost:5004/graphql": {
+    "body": {
+      "data": {
+        "listDockings": [
+          {
+            "berthId": "b2",
+            "dockingId": 4019,
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4020,
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "berthId": "b1",
+            "dockingId": 4021,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "berthId": "b2",
+            "dockingId": 4022,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4023,
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4024,
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "berthId": "b3",
+            "dockingId": 4025,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4026,
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "berthId": "b5",
+            "dockingId": 4027,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4028,
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "berthId": "b1",
+            "dockingId": 4029,
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4030,
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ],
+        "listManifestLines": [
+          {
+            "declaredMassKg": 1840.5,
+            "description": "Cryogenic fuel cells, crated",
+            "dockingId": 4021,
+            "hazardClass": "CRYO",
+            "lineId": 1,
+            "qty": 12,
+            "sku": "CRYO-CELL-42"
+          },
+          {
+            "declaredMassKg": 5200,
+            "description": "Habitat wall panels",
+            "dockingId": 4021,
+            "hazardClass": "NONE",
+            "lineId": 2,
+            "qty": 40,
+            "sku": "HAB-PANEL-7"
+          },
+          {
+            "declaredMassKg": 18.2,
+            "description": "Medical isotopes, shielded",
+            "dockingId": 4021,
+            "hazardClass": "RADIOLOGICAL",
+            "lineId": 3,
+            "qty": 2,
+            "sku": "MED-ISO-9"
+          },
+          {
+            "declaredMassKg": 88000,
+            "description": "Iron ore, unprocessed",
+            "dockingId": 4022,
+            "hazardClass": "NONE",
+            "lineId": 1,
+            "qty": 900,
+            "sku": "ORE-FE-RAW"
+          },
+          {
+            "declaredMassKg": 3100,
+            "description": "Sulfuric acid drums",
+            "dockingId": 4022,
+            "hazardClass": "CORROSIVE",
+            "lineId": 2,
+            "qty": 24,
+            "sku": "ACID-H2SO4"
+          },
+          {
+            "declaredMassKg": 42000,
+            "description": "Grain, bulk containers",
+            "dockingId": 4027,
+            "hazardClass": "NONE",
+            "lineId": 1,
+            "qty": 300,
+            "sku": "GRAIN-BULK"
+          },
+          {
+            "declaredMassKg": 240,
+            "description": "Live bio cultures",
+            "dockingId": 4027,
+            "hazardClass": "BIO",
+            "lineId": 2,
+            "qty": 6,
+            "sku": "BIO-CULT-3"
+          },
+          {
+            "declaredMassKg": 15000,
+            "description": "Alloy scrap, baled",
+            "dockingId": 4019,
+            "hazardClass": "NONE",
+            "lineId": 1,
+            "qty": 120,
+            "sku": "SCRAP-ALLOY"
+          }
+        ],
+        "valuations": [
+          {
+            "declaredValueCents": 9600000,
+            "insuranceClass": "SPECIALIZED",
+            "manifestLineRef": "DCK-004021/1"
+          },
+          {
+            "declaredValueCents": 2400000,
+            "insuranceClass": "STANDARD",
+            "manifestLineRef": "DCK-004021/2"
+          },
+          {
+            "declaredValueCents": 18750000,
+            "insuranceClass": "SPECIALIZED",
+            "manifestLineRef": "DCK-004021/3"
+          },
+          {
+            "declaredValueCents": 5100000,
+            "insuranceClass": "STANDARD",
+            "manifestLineRef": "DCK-004022/1"
+          },
+          {
+            "declaredValueCents": 890000,
+            "insuranceClass": "SPECIALIZED",
+            "manifestLineRef": "DCK-004022/2"
+          },
+          {
+            "declaredValueCents": 1300000,
+            "insuranceClass": "STANDARD",
+            "manifestLineRef": "DCK-004027/1"
+          },
+          {
+            "declaredValueCents": 210000,
+            "insuranceClass": "STANDARD",
+            "manifestLineRef": "DCK-004019/1"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5004/graphql #24ddec1c": {
+    "body": {
+      "data": {
+        "listDockings": [
+          {
+            "berthId": "b2",
+            "dockingId": 4019,
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4020,
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "berthId": "b1",
+            "dockingId": 4021,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "berthId": "b2",
+            "dockingId": 4022,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4023,
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4024,
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "berthId": "b3",
+            "dockingId": 4025,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4026,
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "berthId": "b5",
+            "dockingId": 4027,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4028,
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "berthId": "b1",
+            "dockingId": 4029,
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4030,
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ],
+        "listManifestLines": [
+          {
+            "declaredMassKg": 1840.5,
+            "description": "Cryogenic fuel cells, crated",
+            "dockingId": 4021,
+            "hazardClass": "CRYO",
+            "lineId": 1,
+            "qty": 12,
+            "sku": "CRYO-CELL-42"
+          },
+          {
+            "declaredMassKg": 5200,
+            "description": "Habitat wall panels",
+            "dockingId": 4021,
+            "hazardClass": "NONE",
+            "lineId": 2,
+            "qty": 40,
+            "sku": "HAB-PANEL-7"
+          },
+          {
+            "declaredMassKg": 18.2,
+            "description": "Medical isotopes, shielded",
+            "dockingId": 4021,
+            "hazardClass": "RADIOLOGICAL",
+            "lineId": 3,
+            "qty": 2,
+            "sku": "MED-ISO-9"
+          },
+          {
+            "declaredMassKg": 88000,
+            "description": "Iron ore, unprocessed",
+            "dockingId": 4022,
+            "hazardClass": "NONE",
+            "lineId": 1,
+            "qty": 900,
+            "sku": "ORE-FE-RAW"
+          },
+          {
+            "declaredMassKg": 3100,
+            "description": "Sulfuric acid drums",
+            "dockingId": 4022,
+            "hazardClass": "CORROSIVE",
+            "lineId": 2,
+            "qty": 24,
+            "sku": "ACID-H2SO4"
+          },
+          {
+            "declaredMassKg": 42000,
+            "description": "Grain, bulk containers",
+            "dockingId": 4027,
+            "hazardClass": "NONE",
+            "lineId": 1,
+            "qty": 300,
+            "sku": "GRAIN-BULK"
+          },
+          {
+            "declaredMassKg": 240,
+            "description": "Live bio cultures",
+            "dockingId": 4027,
+            "hazardClass": "BIO",
+            "lineId": 2,
+            "qty": 6,
+            "sku": "BIO-CULT-3"
+          },
+          {
+            "declaredMassKg": 15000,
+            "description": "Alloy scrap, baled",
+            "dockingId": 4019,
+            "hazardClass": "NONE",
+            "lineId": 1,
+            "qty": 120,
+            "sku": "SCRAP-ALLOY"
+          }
+        ],
+        "valuations": [
+          {
+            "declaredValueCents": 9600000,
+            "insuranceClass": "SPECIALIZED",
+            "manifestLineRef": "DCK-004021/1"
+          },
+          {
+            "declaredValueCents": 2400000,
+            "insuranceClass": "STANDARD",
+            "manifestLineRef": "DCK-004021/2"
+          },
+          {
+            "declaredValueCents": 18750000,
+            "insuranceClass": "SPECIALIZED",
+            "manifestLineRef": "DCK-004021/3"
+          },
+          {
+            "declaredValueCents": 5100000,
+            "insuranceClass": "STANDARD",
+            "manifestLineRef": "DCK-004022/1"
+          },
+          {
+            "declaredValueCents": 890000,
+            "insuranceClass": "SPECIALIZED",
+            "manifestLineRef": "DCK-004022/2"
+          },
+          {
+            "declaredValueCents": 1300000,
+            "insuranceClass": "STANDARD",
+            "manifestLineRef": "DCK-004027/1"
+          },
+          {
+            "declaredValueCents": 210000,
+            "insuranceClass": "STANDARD",
+            "manifestLineRef": "DCK-004019/1"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5004/graphql #2bdc459e": {
+    "body": {
+      "data": {
+        "listDockings": [
+          {
+            "dockingId": 4019,
+            "statusCode": "DEPARTED"
+          },
+          {
+            "dockingId": 4020,
+            "statusCode": "DEPARTED"
+          },
+          {
+            "dockingId": 4021,
+            "statusCode": "DOCKED"
+          },
+          {
+            "dockingId": 4022,
+            "statusCode": "DOCKED"
+          },
+          {
+            "dockingId": 4023,
+            "statusCode": "DEPARTED"
+          },
+          {
+            "dockingId": 4024,
+            "statusCode": "ABORTED"
+          },
+          {
+            "dockingId": 4025,
+            "statusCode": "DOCKED"
+          },
+          {
+            "dockingId": 4026,
+            "statusCode": "SCHEDULED"
+          },
+          {
+            "dockingId": 4027,
+            "statusCode": "DOCKED"
+          },
+          {
+            "dockingId": 4028,
+            "statusCode": "SCHEDULED"
+          },
+          {
+            "dockingId": 4029,
+            "statusCode": "SCHEDULED"
+          },
+          {
+            "dockingId": 4030,
+            "statusCode": "APPROACH"
+          }
+        ],
+        "listManifestLines": [
+          {
+            "declaredMassKg": 1840.5,
+            "dockingId": 4021,
+            "hazardClass": "CRYO",
+            "lineId": 1,
+            "qty": 12,
+            "sku": "CRYO-CELL-42"
+          },
+          {
+            "declaredMassKg": 5200,
+            "dockingId": 4021,
+            "hazardClass": "NONE",
+            "lineId": 2,
+            "qty": 40,
+            "sku": "HAB-PANEL-7"
+          },
+          {
+            "declaredMassKg": 18.2,
+            "dockingId": 4021,
+            "hazardClass": "RADIOLOGICAL",
+            "lineId": 3,
+            "qty": 2,
+            "sku": "MED-ISO-9"
+          },
+          {
+            "declaredMassKg": 88000,
+            "dockingId": 4022,
+            "hazardClass": "NONE",
+            "lineId": 1,
+            "qty": 900,
+            "sku": "ORE-FE-RAW"
+          },
+          {
+            "declaredMassKg": 3100,
+            "dockingId": 4022,
+            "hazardClass": "CORROSIVE",
+            "lineId": 2,
+            "qty": 24,
+            "sku": "ACID-H2SO4"
+          },
+          {
+            "declaredMassKg": 42000,
+            "dockingId": 4027,
+            "hazardClass": "NONE",
+            "lineId": 1,
+            "qty": 300,
+            "sku": "GRAIN-BULK"
+          },
+          {
+            "declaredMassKg": 240,
+            "dockingId": 4027,
+            "hazardClass": "BIO",
+            "lineId": 2,
+            "qty": 6,
+            "sku": "BIO-CULT-3"
+          },
+          {
+            "declaredMassKg": 15000,
+            "dockingId": 4019,
+            "hazardClass": "NONE",
+            "lineId": 1,
+            "qty": 120,
+            "sku": "SCRAP-ALLOY"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  }
+}

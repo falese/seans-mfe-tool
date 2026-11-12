@@ -1,4 +1,4 @@
-import { buildBundle, isDevServerRequest, isInfrastructureRequest, normalizeConsoleText, stableStringify, type JourneyRun } from '../bundle';
+import { buildBundle, isDevServerRequest, isInfrastructureRequest, normalizeConsoleText, stableStringify, type JourneyRun, bodyKey } from '../bundle';
 import type { Region } from '../regions';
 
 const region = (id: string, file: string, ownText: string): Region => ({
@@ -101,6 +101,21 @@ describe('buildBundle', () => {
     expect(requests.filter((x) => 'postData' in x)).toHaveLength(1);
   });
 
+  it('records each GraphQL response under its document too: one endpoint answers many queries (ADR-129)', () => {
+    const r = run();
+    r.requests.push(
+      { step: 1, method: 'POST', url: `${APP}graphql`, initiator: [], status: 200, mimeType: 'application/json', body: { data: { a: 1 } }, postData: '{"query":"{ a }"}' },
+      { step: 1, method: 'POST', url: `${APP}graphql`, initiator: [], status: 200, mimeType: 'application/json', body: { data: { b: 2 } }, postData: '{"query":"{ b }"}' }
+    );
+    const b = buildBundle([r], { appUrl: APP, viewport: { width: 1440, height: 900 }, clock: '2026-10-24T00:00:00.000Z' });
+    const responses = b.files['responses.json'] as Record<string, { body: unknown }>;
+    expect(responses[bodyKey('POST', '/graphql', '{"query":"{ a }"}')].body).toEqual({ data: { a: 1 } });
+    expect(responses[bodyKey('POST', '/graphql', '{"query":"{ b }"}')].body).toEqual({ data: { b: 2 } });
+    // The bare key keeps the first, as before.
+    expect(responses['POST /graphql'].body).toEqual({ data: { a: 1 } });
+    expect(bodyKey('POST', '/graphql', '{"query":"{ a }"}')).toMatch(/^POST \/graphql #[0-9a-f]{8}$/);
+  });
+
   it('records the first response for each request, keyed for replay', () => {
     const responses = bundle.files['responses.json'] as Record<string, { body: unknown }>;
     expect(Object.keys(responses).sort()).toEqual([
@@ -162,6 +177,11 @@ describe('dev-server traffic (#442)', () => {
     expect(isInfrastructureRequest('/__webpack_hmr')).toBe(true);
     expect(isInfrastructureRequest('/api/__control-plane')).toBe(false);
     expect(isInfrastructureRequest('/api/tags')).toBe(false);
+  });
+
+  it('treats the capability host\'s own runtime as infrastructure: the host is not the MFE (ADR-129 §13)', () => {
+    expect(isInfrastructureRequest('http://localhost:51234/__smt-host/runtime/layout-adaptors.js')).toBe(true);
+    expect(isInfrastructureRequest('http://localhost:5004/graphql')).toBe(false);
   });
   it('leaves dev-server requests out of the bundle', () => {
     const r = run();

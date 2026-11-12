@@ -1,0 +1,1048 @@
+{
+  "POST http://localhost:5002/graphql": {
+    "body": {
+      "data": {
+        "charges": [
+          {
+            "amountCents": 480000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 220000,
+            "chargeType": "MASS_TARIFF",
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 150000,
+            "chargeType": "HAZMAT_SURCHARGE",
+            "dockingRef": "DCK-004021",
+            "status": "DISPUTED"
+          },
+          {
+            "amountCents": 520000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 610000,
+            "chargeType": "MASS_TARIFF",
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 310000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004025",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 495000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 90000,
+            "chargeType": "HAZMAT_SURCHARGE",
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 505000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 75000,
+            "chargeType": "LATE_DEPARTURE",
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 260000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004020",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 240000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004023",
+            "status": "PAID"
+          }
+        ],
+        "listBerths": [
+          {
+            "berthClass": "medium_freight",
+            "berthId": "b1",
+            "currentDockingId": 4021,
+            "maxMassKg": 250000,
+            "occupiedFlag": 1
+          },
+          {
+            "berthClass": "heavy_bulk",
+            "berthId": "b2",
+            "currentDockingId": 4022,
+            "maxMassKg": 900000,
+            "occupiedFlag": 1
+          },
+          {
+            "berthClass": "light_personnel",
+            "berthId": "b3",
+            "currentDockingId": 4025,
+            "maxMassKg": 80000,
+            "occupiedFlag": 1
+          },
+          {
+            "berthClass": "medium_freight",
+            "berthId": "b4",
+            "currentDockingId": null,
+            "maxMassKg": 250000,
+            "occupiedFlag": 0
+          },
+          {
+            "berthClass": "heavy_bulk",
+            "berthId": "b5",
+            "currentDockingId": 4027,
+            "maxMassKg": 900000,
+            "occupiedFlag": 1
+          },
+          {
+            "berthClass": "light_personnel",
+            "berthId": "b6",
+            "currentDockingId": null,
+            "maxMassKg": 80000,
+            "occupiedFlag": 0
+          }
+        ],
+        "listDockings": [
+          {
+            "berthId": "b2",
+            "dockingId": 4019,
+            "etaUtc": "2026-07-14T06:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4020,
+            "etaUtc": "2026-07-15T09:30:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "berthId": "b1",
+            "dockingId": 4021,
+            "etaUtc": "2026-07-17T14:30:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "berthId": "b2",
+            "dockingId": 4022,
+            "etaUtc": "2026-07-17T20:15:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4023,
+            "etaUtc": "2026-07-16T11:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4024,
+            "etaUtc": "2026-07-17T08:45:00.000Z",
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "berthId": "b3",
+            "dockingId": 4025,
+            "etaUtc": "2026-07-18T07:10:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4026,
+            "etaUtc": "2026-07-19T10:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "berthId": "b5",
+            "dockingId": 4027,
+            "etaUtc": "2026-07-18T02:20:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4028,
+            "etaUtc": "2026-07-19T16:30:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "berthId": "b1",
+            "dockingId": 4029,
+            "etaUtc": "2026-07-20T05:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4030,
+            "etaUtc": "2026-07-18T09:55:00.000Z",
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5002/graphql #2396ce22": {
+    "body": {
+      "data": {
+        "charges": [
+          {
+            "amountCents": 480000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 220000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 150000,
+            "dockingRef": "DCK-004021",
+            "status": "DISPUTED"
+          },
+          {
+            "amountCents": 520000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 610000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 310000,
+            "dockingRef": "DCK-004025",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 495000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 90000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 505000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 75000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 260000,
+            "dockingRef": "DCK-004020",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 240000,
+            "dockingRef": "DCK-004023",
+            "status": "PAID"
+          }
+        ],
+        "getBerth": {
+          "berthClass": "medium_freight",
+          "berthId": "b4",
+          "currentDockingId": null,
+          "occupiedFlag": 0
+        },
+        "listDockings": [
+          {
+            "dockingId": 4020,
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4024,
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4026,
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5002/graphql #2416bc7c": {
+    "body": {
+      "data": {
+        "charges": [
+          {
+            "amountCents": 480000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 220000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 150000,
+            "dockingRef": "DCK-004021",
+            "status": "DISPUTED"
+          },
+          {
+            "amountCents": 520000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 610000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 310000,
+            "dockingRef": "DCK-004025",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 495000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 90000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 505000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 75000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 260000,
+            "dockingRef": "DCK-004020",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 240000,
+            "dockingRef": "DCK-004023",
+            "status": "PAID"
+          }
+        ],
+        "getBerth": {
+          "berthClass": "light_personnel",
+          "berthId": "b6",
+          "currentDockingId": null,
+          "occupiedFlag": 0
+        },
+        "listDockings": [
+          {
+            "dockingId": 4023,
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4028,
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4030,
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5002/graphql #3be73397": {
+    "body": {
+      "data": {
+        "charges": [
+          {
+            "amountCents": 480000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 220000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 150000,
+            "dockingRef": "DCK-004021",
+            "status": "DISPUTED"
+          },
+          {
+            "amountCents": 520000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 610000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 310000,
+            "dockingRef": "DCK-004025",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 495000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 90000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 505000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 75000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 260000,
+            "dockingRef": "DCK-004020",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 240000,
+            "dockingRef": "DCK-004023",
+            "status": "PAID"
+          }
+        ],
+        "getBerth": {
+          "berthClass": "medium_freight",
+          "berthId": "b1",
+          "currentDockingId": 4021,
+          "occupiedFlag": 1
+        },
+        "listDockings": [
+          {
+            "dockingId": 4021,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "dockingId": 4029,
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5002/graphql #46ff1380": {
+    "body": {
+      "data": {
+        "charges": [
+          {
+            "amountCents": 480000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 220000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 150000,
+            "dockingRef": "DCK-004021",
+            "status": "DISPUTED"
+          },
+          {
+            "amountCents": 520000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 610000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 310000,
+            "dockingRef": "DCK-004025",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 495000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 90000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 505000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 75000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 260000,
+            "dockingRef": "DCK-004020",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 240000,
+            "dockingRef": "DCK-004023",
+            "status": "PAID"
+          }
+        ],
+        "getBerth": {
+          "berthClass": "heavy_bulk",
+          "berthId": "b2",
+          "currentDockingId": 4022,
+          "occupiedFlag": 1
+        },
+        "listDockings": [
+          {
+            "dockingId": 4019,
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4022,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5002/graphql #51014ab1": {
+    "body": {
+      "data": {
+        "charges": [
+          {
+            "amountCents": 480000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 220000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 150000,
+            "dockingRef": "DCK-004021",
+            "status": "DISPUTED"
+          },
+          {
+            "amountCents": 520000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 610000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 310000,
+            "dockingRef": "DCK-004025",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 495000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 90000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 505000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 75000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 260000,
+            "dockingRef": "DCK-004020",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 240000,
+            "dockingRef": "DCK-004023",
+            "status": "PAID"
+          }
+        ],
+        "getBerth": {
+          "berthClass": "light_personnel",
+          "berthId": "b3",
+          "currentDockingId": 4025,
+          "occupiedFlag": 1
+        },
+        "listDockings": [
+          {
+            "dockingId": 4025,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5002/graphql #53e81a53": {
+    "body": {
+      "data": {
+        "charges": [
+          {
+            "amountCents": 480000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 220000,
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 150000,
+            "dockingRef": "DCK-004021",
+            "status": "DISPUTED"
+          },
+          {
+            "amountCents": 520000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 610000,
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 310000,
+            "dockingRef": "DCK-004025",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 495000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 90000,
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 505000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 75000,
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 260000,
+            "dockingRef": "DCK-004020",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 240000,
+            "dockingRef": "DCK-004023",
+            "status": "PAID"
+          }
+        ],
+        "getBerth": {
+          "berthClass": "heavy_bulk",
+          "berthId": "b5",
+          "currentDockingId": 4027,
+          "occupiedFlag": 1
+        },
+        "listDockings": [
+          {
+            "dockingId": 4027,
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5002/graphql #80d3ca84": {
+    "body": {
+      "data": {
+        "listDockings": [
+          {
+            "berthId": "b2",
+            "dockingId": 4019,
+            "etaUtc": "2026-07-14T06:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4020,
+            "etaUtc": "2026-07-15T09:30:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "berthId": "b1",
+            "dockingId": 4021,
+            "etaUtc": "2026-07-17T14:30:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "berthId": "b2",
+            "dockingId": 4022,
+            "etaUtc": "2026-07-17T20:15:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4023,
+            "etaUtc": "2026-07-16T11:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4024,
+            "etaUtc": "2026-07-17T08:45:00.000Z",
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "berthId": "b3",
+            "dockingId": 4025,
+            "etaUtc": "2026-07-18T07:10:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4026,
+            "etaUtc": "2026-07-19T10:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "berthId": "b5",
+            "dockingId": 4027,
+            "etaUtc": "2026-07-18T02:20:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4028,
+            "etaUtc": "2026-07-19T16:30:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "berthId": "b1",
+            "dockingId": 4029,
+            "etaUtc": "2026-07-20T05:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4030,
+            "etaUtc": "2026-07-18T09:55:00.000Z",
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST http://localhost:5002/graphql #fd44c66a": {
+    "body": {
+      "data": {
+        "charges": [
+          {
+            "amountCents": 480000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 220000,
+            "chargeType": "MASS_TARIFF",
+            "dockingRef": "DCK-004021",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 150000,
+            "chargeType": "HAZMAT_SURCHARGE",
+            "dockingRef": "DCK-004021",
+            "status": "DISPUTED"
+          },
+          {
+            "amountCents": 520000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 610000,
+            "chargeType": "MASS_TARIFF",
+            "dockingRef": "DCK-004022",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 310000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004025",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 495000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 90000,
+            "chargeType": "HAZMAT_SURCHARGE",
+            "dockingRef": "DCK-004027",
+            "status": "PENDING"
+          },
+          {
+            "amountCents": 505000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 75000,
+            "chargeType": "LATE_DEPARTURE",
+            "dockingRef": "DCK-004019",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 260000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004020",
+            "status": "PAID"
+          },
+          {
+            "amountCents": 240000,
+            "chargeType": "DOCKING_FEE",
+            "dockingRef": "DCK-004023",
+            "status": "PAID"
+          }
+        ],
+        "listBerths": [
+          {
+            "berthClass": "medium_freight",
+            "berthId": "b1",
+            "currentDockingId": 4021,
+            "maxMassKg": 250000,
+            "occupiedFlag": 1
+          },
+          {
+            "berthClass": "heavy_bulk",
+            "berthId": "b2",
+            "currentDockingId": 4022,
+            "maxMassKg": 900000,
+            "occupiedFlag": 1
+          },
+          {
+            "berthClass": "light_personnel",
+            "berthId": "b3",
+            "currentDockingId": 4025,
+            "maxMassKg": 80000,
+            "occupiedFlag": 1
+          },
+          {
+            "berthClass": "medium_freight",
+            "berthId": "b4",
+            "currentDockingId": null,
+            "maxMassKg": 250000,
+            "occupiedFlag": 0
+          },
+          {
+            "berthClass": "heavy_bulk",
+            "berthId": "b5",
+            "currentDockingId": 4027,
+            "maxMassKg": 900000,
+            "occupiedFlag": 1
+          },
+          {
+            "berthClass": "light_personnel",
+            "berthId": "b6",
+            "currentDockingId": null,
+            "maxMassKg": 80000,
+            "occupiedFlag": 0
+          }
+        ],
+        "listDockings": [
+          {
+            "berthId": "b2",
+            "dockingId": 4019,
+            "etaUtc": "2026-07-14T06:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4020,
+            "etaUtc": "2026-07-15T09:30:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "berthId": "b1",
+            "dockingId": 4021,
+            "etaUtc": "2026-07-17T14:30:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "berthId": "b2",
+            "dockingId": 4022,
+            "etaUtc": "2026-07-17T20:15:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4023,
+            "etaUtc": "2026-07-16T11:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4024,
+            "etaUtc": "2026-07-17T08:45:00.000Z",
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "berthId": "b3",
+            "dockingId": 4025,
+            "etaUtc": "2026-07-18T07:10:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "berthId": "b4",
+            "dockingId": 4026,
+            "etaUtc": "2026-07-19T10:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "berthId": "b5",
+            "dockingId": 4027,
+            "etaUtc": "2026-07-18T02:20:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4028,
+            "etaUtc": "2026-07-19T16:30:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "berthId": "b1",
+            "dockingId": 4029,
+            "etaUtc": "2026-07-20T05:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "berthId": "b6",
+            "dockingId": 4030,
+            "etaUtc": "2026-07-18T09:55:00.000Z",
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  }
+}
