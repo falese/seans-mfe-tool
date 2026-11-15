@@ -13,7 +13,9 @@
     "build:server": "tsc server.ts --module commonjs --esModuleInterop --skipLibCheck --target ES2022 --moduleResolution node --outDir .",
     "mesh:validate": "mesh validate",
     "test": "jest",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint src --ext .ts,.tsx",
+    "test:e2e": "playwright test -c playwright.characterization.config.ts",
+    "test:contract": "mesh build && jest --testRegex 'contract/[^/]+\\.contract\\.ts$'"
   },
   "dependencies": {
     "@graphql-mesh/serve-runtime": "^1.2.4",
@@ -60,7 +62,8 @@
     "eslint": "^8.55.0",
     "jest": "^29.7.0",
     "supertest": "^6.3.3",
-    "@seans-mfe-tool/runtime": "file:../../../dist/runtime"
+    "@seans-mfe-tool/runtime": "file:../../../dist/runtime",
+    "@playwright/test": "^1.44.0"
   },
   "jest": {
     "preset": "ts-jest",
@@ -78,7 +81,11 @@
           "tsconfig": "tsconfig.json"
         }
       ]
-    }
+    },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/e2e/"
+    ]
   },
   "overrides": {
     "uuid": "^11.1.1",

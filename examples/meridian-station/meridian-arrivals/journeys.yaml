@@ -1,0 +1,278 @@
+# Crawled from http://localhost:5008 by seans-mfe-tool test:crawl (ADR-129 §9): 11 state(s), 32 interaction(s).
+# One journey per interaction, each replayable from the start. Edit freely: change what is filled,
+# remove what is not worth testing, rename journeys. test:generate records these and writes the tests.
+journeys:
+  - name: crawl-000
+    steps:
+      - goto: /
+  - name: crawl-001
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-002
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-003
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-004
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-005
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Al-Sayed
+  - name: crawl-006
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: zzzz-no-match
+  - name: crawl-007
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: CLEARED
+  - name: crawl-008
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: FLAGGED
+  - name: crawl-009
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: PENDING
+  - name: crawl-010
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Al-Sayed
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-011
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Al-Sayed
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-012
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Al-Sayed
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Harbormaster
+  - name: crawl-013
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: zzzz-no-match
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-014
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: zzzz-no-match
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-015
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: zzzz-no-match
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Manifest
+  - name: crawl-016
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: CLEARED
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-017
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: CLEARED
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-018
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: CLEARED
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Delgado
+  - name: crawl-019
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: CLEARED
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: ALL
+  - name: crawl-020
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: FLAGGED
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-021
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: FLAGGED
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-022
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: PENDING
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-023
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: PENDING
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-024
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: PENDING
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: FLAGGED
+  - name: crawl-025
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Al-Sayed
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Harbormaster
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-026
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Al-Sayed
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Harbormaster
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-027
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: zzzz-no-match
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Manifest
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-028
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: zzzz-no-match
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Manifest
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-029
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: CLEARED
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Delgado
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-030
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: CLEARED
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: Delgado
+      - click: role=tab[name="📦 PassengerManifest"s]
+  - name: crawl-031
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: PENDING
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: FLAGGED
+      - click: role=tab[name="📦 VesselRegistry"s]
+  - name: crawl-032
+    steps:
+      - goto: /
+      - click: role=tab[name="📦 PassengerManifest"s]
+      - select:
+          selector: role=combobox[name="Clearance"s]
+          value: PENDING
+      - fill:
+          selector: role=searchbox[name="Search passengers"s]
+          value: FLAGGED
+      - click: role=tab[name="📦 PassengerManifest"s]

@@ -70,6 +70,7 @@ const NOT_IN_THIS_REPO = [
   /^packages\/(config|telemetry)$/,     // proposed, not yet created
   /^src\/adaptors\//,                   // coder's tree, not this one
   /^src\/monolith\//,                   // a ported MFE's copy of the monolith (decompose:port, ADR-126)
+  /^src\/__smt__\//,                     // an MFE's generated test harness and recording (test:generate, ADR-129)
 ];
 
 /**

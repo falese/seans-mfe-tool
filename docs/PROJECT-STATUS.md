@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-10-25
+**Last Updated:** 2026-11-11
 
 This is the single authoritative overview of what's done, what's active, and what's deferred.
 Read this before starting any new work. Then read `CLAUDE.md` for coding conventions and `.github/copilot-instructions.md` for the full context.
@@ -148,6 +148,7 @@ non-engineers: [`docs/decomposition-architecture.html`](./decomposition-architec
 | `decompose:scaffold` — approved proposal → generated fleet, legacy wrapper, shell, starting composition (ADR-111, #417) | `src/decompose/scaffold/`, `docs/decompose-scaffold.md` | #480 |
 | Playbook skill and its mechanical rules as a Sentinel `ValidatePort` (#420) | `.agents/skills/decompose-monolith/`, `src/sentinel/decomposition.ts` | #480 |
 | `decompose:port` — every domain into its MFE, every read through its own BFF, the proposal composed directly (ADR-126, ADR-127, PDR-013, #419) | `src/decompose/port/`, `docs/decompose-port.md` | #480 |
+| `test:generate` — an MFE's tests from a capture (PDR-014, ADR-129, #418) | `src/testgen/`, `docs/test-generate.md` | — |
 
 **Simplified before steps 5–7 (#454, done in #455).**
 
@@ -178,7 +179,17 @@ extra backend calls, no console errors, with a stated 3-pixel antialiasing budge
 no direct backend call and no MFE shares state ([decompose-port](./decompose-port.md)). Strangling a
 live monolith is deferred (ADR-125).
 
-**Not built:** per-MFE generated tests, contract tests and migrated keepers (#418); writes through
+**Tests are generated (#418, PDR-014, ADR-129).** `test:generate` writes each MFE's tests from the
+capture: each capability alone in jsdom, every journey in Playwright with a visual baseline per
+capability per step, the BFF's provider and connector contract, and the monolith's tests triaged
+keep, moved with their code. On meridian-monolith's fleet, with no hand edits: every MFE's `npm
+test`, `test:contract` and journey spec (against the monolith) pass, except the simulator's
+alone test (Babylon.js does not load in Jest). Line coverage of the ported code goes from the
+answer key's 29.2% to 52.0%, and to 97.4% outside the simulator
+([test-generate](./test-generate.md)). The journey specs have not yet been run against the
+composed shell.
+
+**Not built:** writes through
 a BFF (mutations are not inferred); the Figma library per MFE (#421); authenticated capture and
 redaction (#424). The agent has been exercised against the live API only with a refused
 key. The clustering thresholds are tuned on one subject.

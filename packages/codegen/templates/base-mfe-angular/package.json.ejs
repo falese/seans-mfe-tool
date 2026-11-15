@@ -12,6 +12,7 @@
     "prebff:dev": "mesh build",
     "bff:dev": "ts-node server.ts",
     "mesh:validate": "mesh validate",
+    "test:contract": "mesh build && jest --testRegex 'contract/[^/]+\\.contract\\.ts$'",
 <%_ } _%>
     "test": "jest",
     "lint": "eslint src --ext .ts"

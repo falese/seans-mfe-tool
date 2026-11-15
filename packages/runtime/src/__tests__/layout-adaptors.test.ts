@@ -88,6 +88,41 @@ describe('moduleFederationAdaptor', () => {
   });
 });
 
+describe('moduleFederationAdaptor share scope outside a webpack host', () => {
+  const scope = 'share_scope_test';
+  const globalScope = globalThis as unknown as Record<string, unknown>;
+  afterEach(() => {
+    delete globalScope[scope];
+    delete globalScope.document;
+  });
+
+  it('initialises a remote with one share scope every time: a container refuses a different one', async () => {
+    // A real container: the second init with a different object throws (webpack's own message).
+    let first: unknown;
+    const init = jest.fn(async (shareScope: unknown): Promise<void> => {
+      if (first === undefined) first = shareScope;
+      else if (first !== shareScope) throw new Error('Container initialization failed as it has already been initialized with a different share scope');
+    });
+    const mfe = { render: async (): Promise<void> => undefined, unmount: (): void => undefined };
+    globalScope[scope] = { init, get: async () => () => ({ mfe }) };
+    globalScope.document = { createElement: (): { id: string } => ({ id: '' }) };
+    const experience = (id: string): RenderedExperience => ({
+      id,
+      mfe: 'cargo',
+      capability: id,
+      contentType: 'module-federation',
+      output: { remoteEntryUrl: 'http://example.test/remoteEntry.js', scope, module: './App' },
+      createdAt: new Date().toISOString(),
+    });
+    const helpers = { sendAction: async (): Promise<void> => undefined, reportError: (): void => undefined };
+
+    await moduleFederationAdaptor.mount(experience('CargoManifest'), new FakeSlot(), helpers);
+    await moduleFederationAdaptor.mount(experience('HazardSummary'), new FakeSlot(), helpers);
+    expect(init).toHaveBeenCalledTimes(2);
+    expect(init.mock.calls[0][0]).toBe(init.mock.calls[1][0]);
+  });
+});
+
 describe('moduleFederationAdaptor mount serialization (keyed-slot fan-out)', () => {
   const scope = 'serialization_test';
   const globalScope = globalThis as unknown as Record<string, unknown>;

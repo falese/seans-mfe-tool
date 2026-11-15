@@ -12,7 +12,9 @@
     "bff:dev": "ts-node server.ts",
     "mesh:validate": "mesh validate",
     "test": "jest",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "test:e2e": "playwright test -c playwright.characterization.config.ts",
+    "test:contract": "mesh build && jest --testRegex 'contract/[^/]+\\.contract\\.ts$'"
   },
   "dependencies": {
     "@graphql-mesh/serve-runtime": "^1.2.4",
@@ -57,7 +59,8 @@
     "jest": "^29.7.0",
     "jest-preset-angular": "^14.0.0",
     "supertest": "^6.3.3",
-    "@seans-mfe-tool/runtime": "file:../../../dist/runtime"
+    "@seans-mfe-tool/runtime": "file:../../../dist/runtime",
+    "@playwright/test": "^1.44.0"
   },
   "overrides": {
     "fast-uri": "^3.1.2",

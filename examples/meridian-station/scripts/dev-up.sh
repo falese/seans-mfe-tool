@@ -45,7 +45,9 @@ done
 
 echo "── Control plane ───────────────────────────────────────"
 free_port 4500
-( cd "$CONTROL_PLANE/registry" && PORT=4500 \
+# The registry refuses writes without a token (ADR-124); this is the published
+# development one, as in docker-compose.yaml — register-station.sh sends the same.
+( cd "$CONTROL_PLANE/registry" && PORT=4500 REGISTRY_TOKEN="${REGISTRY_TOKEN:-local-dev-only}" \
     nohup node simple-registry.js > "$LOGS/registry.log" 2>&1 & )
 sleep 2
 free_port 4504
@@ -74,7 +76,8 @@ free_port 5001
 ( cd "$STATION/meridian-console" && nohup npx serve dist -p 5001 --cors > "$LOGS/console.log" 2>&1 & )
 echo "  meridian-console → :5001 (static)"
 for entry in "meridian-docking-control:5002" "meridian-life-support:5003" \
-             "meridian-cargo-ops:5004" "meridian-crew-services:5005" "meridian-concourse:5006"; do
+             "meridian-cargo-ops:5004" "meridian-crew-services:5005" "meridian-concourse:5006" \
+             "meridian-arrivals:5008"; do
   mfe=${entry%%:*}; port=${entry##*:}
   free_port "$port"
   ( cd "$STATION/$mfe" && PORT=$port nohup npx ts-node server.ts > "$LOGS/$mfe.log" 2>&1 & )
@@ -89,7 +92,7 @@ echo "  meridian-shell → :5000"
 echo
 echo "Waiting for everything to come up…"
 sleep 12
-for port in 5101 5102 5103 5001 5002 5003 5004 5005 5006 5000; do
+for port in 5101 5102 5103 5001 5002 5003 5004 5005 5006 5008 5000; do
   code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$port/" 2>/dev/null)
   printf "  :%s %s\n" "$port" "$code"
 done

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seans-mfe.dev/schemas/test:crawl.json",
+  "title": "test:crawl",
+  "description": "Crawl a running MFE and write a journey file: every interactive control in every state reached from the start, one replayable journey per interaction (ADR-129). test:generate --url records it into tests.",
+  "input": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "The running MFE (its standalone page); omit with --host"
+      },
+      "out": {
+        "type": "string",
+        "description": "The journey file to write (default: ./journeys.yaml, or <mfe>/journeys.yaml with --host)"
+      },
+      "host": {
+        "type": "string",
+        "description": "Crawl this MFE directory through the capability host: each capability mounted by the platform, in any framework (ADR-129 §13)"
+      },
+      "remote": {
+        "type": "string",
+        "description": "With --host, the origin the MFE is served from (default: its manifest's remoteEntry)"
+      },
+      "port": {
+        "type": "string",
+        "description": "With --host, the port to serve the host on",
+        "default": 5180
+      },
+      "max": {
+        "type": "string",
+        "description": "At most this many interactions",
+        "default": 100
+      },
+      "exclude": {
+        "type": "string",
+        "description": "Never perform a control whose accessible name matches this pattern (case-insensitive)"
+      },
+      "viewport": {
+        "type": "string",
+        "description": "Viewport as WxH",
+        "default": "1440x900"
+      },
+      "settle": {
+        "type": "string",
+        "description": "Milliseconds to wait after the network is quiet before reading a state",
+        "default": 300
+      }
+    },
+    "required": [],
+    "x-positional": [
+      "url"
+    ]
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "url",
+      "out",
+      "states",
+      "interactions",
+      "journeys",
+      "truncated"
+    ],
+    "properties": {
+      "url": {
+        "type": "string"
+      },
+      "out": {
+        "type": "string",
+        "description": "The journey file written."
+      },
+      "states": {
+        "type": "number"
+      },
+      "interactions": {
+        "type": "number"
+      },
+      "journeys": {
+        "type": "number"
+      },
+      "truncated": {
+        "type": "boolean",
+        "description": "True when --max ended the crawl before every control was tried."
+      }
+    },
+    "additionalProperties": false
+  },
+  "errorCodes": [
+    0,
+    1,
+    2,
+    64,
+    65,
+    66,
+    69,
+    70,
+    77,
+    124
+  ]
+}

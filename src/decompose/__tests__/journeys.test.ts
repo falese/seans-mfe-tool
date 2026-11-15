@@ -23,6 +23,12 @@ journeys:
     ]);
   });
 
+  it('reads a select step: choose an option of a dropdown by its value (ADR-129 §9)', () => {
+    const [j] = parseJourneys('journeys:\n  - name: filter\n    steps:\n      - goto: /\n      - select: { selector: "role=combobox[name=\\"Clearance\\"s]", value: FLAGGED }\n');
+    expect(j.steps[1]).toEqual({ select: { selector: 'role=combobox[name="Clearance"s]', value: 'FLAGGED' } });
+    expect(describeStep(j.steps[1])).toBe('select FLAGGED in role=combobox[name="Clearance"s]');
+  });
+
   it('reads the same shape as JSON', () => {
     const journeys = parseJourneys('{"journeys":[{"name":"a","steps":[{"goto":"/"}]}]}');
     expect(journeys[0].steps).toEqual([{ goto: '/' }]);

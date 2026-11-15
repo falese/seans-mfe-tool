@@ -70,10 +70,9 @@ pixel-identical: the clean run differs by 0 pixels.
   `/graphql`; verify lets those requests through to the BFF (in demo mode, answering from the
   capture) and counts each as the backend calls its root fields stand for, using the proposal's
   specs. A domain re-loading data the monolith had already loaded is reported as *repeated*, not
-  failed (ADR-127 §4). What the BFF itself sends upstream is for the contract tests (#418).
+  failed (ADR-127 §4). What the BFF itself sends upstream is for its contract tests ([test-generate](./test-generate.md)).
 - **The catch-all route counts as visited.** `*` matches any path, so it never shows up as a
   coverage gap.
-- **Still to come under #418:**
-  - generated Playwright characterization specs for each scaffolded MFE's own CI;
-  - contract tests from the inferred specs (ADR-112);
-  - migrating the tests triaged as keep.
+- **Each MFE's own tests** are not this command's job. `test:generate` writes them from the same
+  capture: each capability alone, the journeys with visual baselines, the BFF's contract, and the
+  tests triaged keep ([test-generate](./test-generate.md), ADR-129).

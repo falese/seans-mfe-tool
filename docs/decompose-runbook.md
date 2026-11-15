@@ -137,6 +137,18 @@ route blocks into slots, and composes the approved proposal directly. Then build
 it, and check it (step 8): the differences are the port work left, mostly state the monolith
 shared for free. → [decompose-port](./decompose-port.md)
 
+## 7. Generate every MFE's tests
+
+```bash
+seans-mfe-tool test:generate ./evidence/proposal --proposal
+```
+
+Writes each MFE's tests from the capture: every capability rendered alone (`npm test`), every
+journey in Playwright with a visual baseline per capability (`npm run test:e2e`), the BFF's
+contract (`npm test`, then `npm run test:contract`), and the monolith's tests triaged keep. Run the
+journey spec against the monolith first; it must pass there. Each MFE's `TESTS.md` says what is
+covered and what is not. → [test-generate](./test-generate.md)
+
 ## 8. Check nothing changed
 
 Once the composed app runs — after step 5 with the legacy wrapper alone, and after step 6 with

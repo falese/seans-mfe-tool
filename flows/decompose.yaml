@@ -71,9 +71,16 @@ steps:
     from: [proposal/decomposition.yaml]
     command: seans-mfe-tool decompose:port {root}/proposal
 
+  - id: tests
+    title: Generate every MFE's tests from the capture — alone, journeys, visual, contract
+    after: [port]
+    produces: [proposal/tests.json]
+    from: [proposal/decomposition.yaml, requests.json]
+    command: seans-mfe-tool test:generate {root}/proposal --proposal
+
   - id: verify
     title: Prove the composed app behaves like the monolith
-    after: [port]
+    after: [tests]
     produces: [../verify/parity.json]
     check: at-parity
     command: seans-mfe-tool decompose:verify {root}

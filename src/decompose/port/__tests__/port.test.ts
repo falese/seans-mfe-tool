@@ -81,7 +81,9 @@ describe('decompose:port on meridian-monolith', () => {
     const f = read('meridian-ops-cargo', 'src', 'features', 'CargoManifest', 'CargoManifest.tsx');
     expect(f).toContain("import { BrowserRouter } from 'react-router-dom';");
     expect(f).toContain("import { AppProvider } from '../../monolith/src/store/AppContext';");
-    expect(f).toMatch(/<BrowserRouter>\s*<AppProvider>\s*<Ported \{\.\.\.props\} \/>\s*<\/AppProvider>\s*<\/BrowserRouter>/);
+    // Any component type-checks, whatever props it requires: a repeated tile's are given by its renderer.
+    expect(f).toContain('const Rendered = Ported as unknown as React.ComponentType<Record<string, unknown>>;');
+    expect(f).toMatch(/<BrowserRouter>\s*<AppProvider>\s*<Rendered \{\.\.\.props\} \/>\s*<\/AppProvider>\s*<\/BrowserRouter>/);
     const shellApp = read('meridian-ops-shell', 'src', 'features', 'App', 'App.tsx');
     expect(shellApp).toContain('<SlotRegistrar.Provider value={provideSlot}>');
   });

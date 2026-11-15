@@ -1,0 +1,272 @@
+openapi: 3.0.3
+info:
+  title: StellarLedger API
+  description: >
+    Meridian Station's finance vendor. Modern fintech house style: camelCase
+    fields, every list wrapped in a {result, meta} envelope with cursor
+    pagination, money as integer cents plus a currency code, and formatted
+    string references to everyone else's entities (dockingRef "DCK-004021"
+    for the harbormaster's docking_id 4021, crewRef "CRW-0042" for StationOS
+    CrewId 42, merchantId "ACC-7105" for StationOS VendorId 105).
+    Owns accounts, tariff charges, merchant settlements, crew payroll — and
+    the cargo line valuations that finance insisted belong to them, not to
+    the harbormaster's manifest.
+  version: 2026.06.1
+servers:
+  - url: http://stellar-ledger-api:5102/api
+paths:
+  /accounts:
+    get:
+      operationId: listAccounts
+      summary: List accounts
+      parameters:
+        - name: accountType
+          in: query
+          schema: { type: string }
+        - name: standing
+          in: query
+          schema: { type: string }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 25 }
+      responses:
+        '200':
+          description: Envelope of accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items: { $ref: '#/components/schemas/account' }
+                  meta:
+                    type: object
+                    properties:
+                      cursor: { type: string, nullable: true }
+                      hasMore: { type: boolean }
+  /accounts/{accountId}:
+    get:
+      operationId: getAccount
+      summary: Get one account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: An account
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/account' }
+  /charges:
+    get:
+      operationId: listCharges
+      summary: List tariff charges
+      parameters:
+        - name: dockingRef
+          in: query
+          schema: { type: string }
+        - name: accountId
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 25 }
+      responses:
+        '200':
+          description: Envelope of charges
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items: { $ref: '#/components/schemas/charge' }
+                  meta:
+                    type: object
+                    properties:
+                      cursor: { type: string, nullable: true }
+                      hasMore: { type: boolean }
+  /valuations:
+    get:
+      operationId: listValuations
+      summary: List cargo line valuations
+      parameters:
+        - name: manifestLineRef
+          in: query
+          schema: { type: string }
+        - name: dockingRef
+          in: query
+          schema: { type: string }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 25 }
+      responses:
+        '200':
+          description: >
+            Envelope of valuations. manifestLineRef is "DCK-004021/7" —
+            the finance team's own composite of the harbormaster's
+            docking_id and line_id, invented without telling anyone.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items: { $ref: '#/components/schemas/valuation' }
+                  meta:
+                    type: object
+                    properties:
+                      cursor: { type: string, nullable: true }
+                      hasMore: { type: boolean }
+  /settlements:
+    get:
+      operationId: listSettlements
+      summary: List merchant settlements
+      parameters:
+        - name: merchantId
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 25 }
+      responses:
+        '200':
+          description: Envelope of settlements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items: { $ref: '#/components/schemas/settlement' }
+                  meta:
+                    type: object
+                    properties:
+                      cursor: { type: string, nullable: true }
+                      hasMore: { type: boolean }
+  /payroll:
+    get:
+      operationId: listPayroll
+      summary: List crew payroll records
+      parameters:
+        - name: crewRef
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 25 }
+      responses:
+        '200':
+          description: Envelope of payroll records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items: { $ref: '#/components/schemas/payroll' }
+                  meta:
+                    type: object
+                    properties:
+                      cursor: { type: string, nullable: true }
+                      hasMore: { type: boolean }
+components:
+  schemas:
+    account:
+      type: object
+      properties:
+        accountId: { type: string, example: ACC-7001 }
+        displayName: { type: string, example: Helios Cargo Lines }
+        accountType:
+          type: string
+          example: OPERATOR
+          description: OPERATOR | MERCHANT | CREW
+        standing:
+          type: string
+          example: GOOD
+          description: GOOD | DELINQUENT | FROZEN
+        balanceCents: { type: integer, example: 1250000 }
+        currency: { type: string, example: CR }
+    charge:
+      type: object
+      properties:
+        chargeId: { type: string, example: CHG-90311 }
+        dockingRef: { type: string, example: DCK-004021 }
+        accountId: { type: string, example: ACC-7001 }
+        chargeType:
+          type: string
+          example: DOCKING_FEE
+          description: DOCKING_FEE | MASS_TARIFF | HAZMAT_SURCHARGE | LATE_DEPARTURE
+        amountCents: { type: integer, example: 480000 }
+        currency: { type: string, example: CR }
+        status:
+          type: string
+          example: PENDING
+          description: PENDING | PAID | DISPUTED | WAIVED
+    valuation:
+      type: object
+      properties:
+        valuationId: { type: string, example: VAL-33107 }
+        manifestLineRef: { type: string, example: DCK-004021/7 }
+        declaredValueCents: { type: integer, example: 9600000 }
+        currency: { type: string, example: CR }
+        insuranceClass:
+          type: string
+          example: SPECIALIZED
+          description: STANDARD | SPECIALIZED | UNINSURABLE
+    settlement:
+      type: object
+      properties:
+        settlementId: { type: string, example: STL-51220 }
+        merchantId: { type: string, example: ACC-7105 }
+        periodStart: { type: string, example: '2026-07-01' }
+        periodEnd: { type: string, example: '2026-07-15' }
+        grossCents: { type: integer, example: 2210000 }
+        feeCents: { type: integer, example: 110500 }
+        netCents: { type: integer, example: 2099500 }
+        status:
+          type: string
+          example: SETTLED
+          description: OPEN | SETTLED | HELD
+    payroll:
+      type: object
+      properties:
+        payrollId: { type: string, example: PAY-80412 }
+        crewRef: { type: string, example: CRW-0042 }
+        periodEnd: { type: string, example: '2026-07-15' }
+        grossCents: { type: integer, example: 720000 }
+        status:
+          type: string
+          example: PAID
+          description: SCHEDULED | PAID | HELD

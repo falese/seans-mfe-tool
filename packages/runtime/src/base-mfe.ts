@@ -82,6 +82,19 @@ export const VALID_TRANSITIONS: Readonly<Record<MFEState, readonly MFEState[]>> 
  * - Implement abstract doCapability() methods
  * - Implement custom lifecycle handlers referenced in DSL
  */
+/**
+ * The error a capability's result reports, if it reports one: `{ status: 'error', error }`,
+ * with `error` an Error or a `{ message }` record (LoadResult's). Undefined for success.
+ */
+function reportedFailure(value: unknown): Error | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const v = value as { status?: unknown; error?: unknown };
+  if (v.status !== 'error') return undefined;
+  if (v.error instanceof Error) return v.error;
+  const message = (v.error as { message?: unknown } | undefined)?.message;
+  return new BusinessError(typeof message === 'string' ? message : 'capability reported an error', 'CAPABILITY_FAILED');
+}
+
 export abstract class BaseMFE {
   /** DSL manifest for this MFE */
   protected readonly manifest: DSLManifest;
@@ -538,7 +551,7 @@ export abstract class BaseMFE {
     context: Context
   ): Promise<T> {
     const desc = CAPABILITY_DESCRIPTORS[name];
-    const result: { value?: T } = {};
+    const result: { value?: T; failure?: Error } = {};
 
     const pipeline: Middleware[] = [
       this.stateGuard(desc.preStates),
@@ -549,6 +562,14 @@ export abstract class BaseMFE {
       async (ctx, next) => {
         this.assertCapabilityImplemented(name);
         result.value = await doFn(ctx);
+        // A failure answered in the result (`{ status: 'error' }`, the envelope a caller
+        // reads) is still a failure: its error hooks run and its after hooks do not, as
+        // for a throw (ADR-042, REQ-042). The lifecycle state is left as it was.
+        result.failure = reportedFailure(result.value);
+        if (result.failure) {
+          this.reportedFailures.add(ctx);
+          await this.executeLifecycle(name, 'error', { ...ctx, error: result.failure });
+        }
         await next();
       },
       this.lifecyclePhase(name, 'after'),
@@ -602,10 +623,14 @@ export abstract class BaseMFE {
   /** Middleware: run one lifecycle phase's DSL hooks for a capability. */
   private lifecyclePhase(capability: string, phase: 'before' | 'main' | 'after'): Middleware {
     return async (ctx, next) => {
-      await this.executeLifecycle(capability, phase, ctx);
+      // No after phase for a capability whose result reported a failure (ADR-042).
+      if (!(phase === 'after' && this.reportedFailures.has(ctx))) await this.executeLifecycle(capability, phase, ctx);
       await next();
     };
   }
+
+  /** Invocations whose result reported a failure: their after phase does not run. */
+  private readonly reportedFailures = new WeakSet<Context>();
 
   /**
    * Middleware: on downstream failure, run the capability's error lifecycle

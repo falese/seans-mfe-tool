@@ -1,0 +1,508 @@
+{
+  "POST /graphql": {
+    "body": {
+      "data": {
+        "accounts": [
+          {
+            "accountId": "ACC-7001",
+            "balanceCents": 1250000,
+            "displayName": "Helios Cargo Lines",
+            "standing": "GOOD"
+          },
+          {
+            "accountId": "ACC-7002",
+            "balanceCents": -2150000,
+            "displayName": "Vulcan Bulk Haulage",
+            "standing": "DELINQUENT"
+          },
+          {
+            "accountId": "ACC-7003",
+            "balanceCents": 890000,
+            "displayName": "Meridian Transit",
+            "standing": "GOOD"
+          },
+          {
+            "accountId": "ACC-7004",
+            "balanceCents": 310000,
+            "displayName": "Quickstep Couriers",
+            "standing": "GOOD"
+          },
+          {
+            "accountId": "ACC-7105",
+            "balanceCents": 461000,
+            "displayName": "Red Dust Noodle Bar",
+            "standing": "GOOD"
+          },
+          {
+            "accountId": "ACC-7106",
+            "balanceCents": 1180000,
+            "displayName": "Orbit Outfitters",
+            "standing": "GOOD"
+          },
+          {
+            "accountId": "ACC-7107",
+            "balanceCents": -96000,
+            "displayName": "Lagrange Coffee",
+            "standing": "DELINQUENT"
+          }
+        ],
+        "listDockings": [
+          {
+            "dockingId": 4019,
+            "etaUtc": "2026-07-14T06:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4020,
+            "etaUtc": "2026-07-15T09:30:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4021,
+            "etaUtc": "2026-07-17T14:30:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "dockingId": 4022,
+            "etaUtc": "2026-07-17T20:15:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "dockingId": 4023,
+            "etaUtc": "2026-07-16T11:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4024,
+            "etaUtc": "2026-07-17T08:45:00.000Z",
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4025,
+            "etaUtc": "2026-07-18T07:10:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "dockingId": 4026,
+            "etaUtc": "2026-07-19T10:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4027,
+            "etaUtc": "2026-07-18T02:20:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4028,
+            "etaUtc": "2026-07-19T16:30:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4029,
+            "etaUtc": "2026-07-20T05:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4030,
+            "etaUtc": "2026-07-18T09:55:00.000Z",
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ],
+        "listVessels": [
+          {
+            "maxCapacityKg": 300000,
+            "operatorName": "Helios Cargo Lines",
+            "vesselName": "Aurora Freight Nine",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "maxCapacityKg": 850000,
+            "operatorName": "Vulcan Bulk Haulage",
+            "vesselName": "Cinder Hauler",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "maxCapacityKg": 60000,
+            "operatorName": "Meridian Transit",
+            "vesselName": "Starlark",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "maxCapacityKg": 280000,
+            "operatorName": "Helios Cargo Lines",
+            "vesselName": "Pale Horizon",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "maxCapacityKg": 90000,
+            "operatorName": "Quickstep Couriers",
+            "vesselName": "Kestrel Run",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "maxCapacityKg": 880000,
+            "operatorName": "Vulcan Bulk Haulage",
+            "vesselName": "Iron Meridian",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "maxCapacityKg": 85000,
+            "operatorName": "Quickstep Couriers",
+            "vesselName": "Nightjar",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "maxCapacityKg": 65000,
+            "operatorName": "Meridian Transit",
+            "vesselName": "Solace",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST /graphql #10769e1d": {
+    "body": {
+      "data": {
+        "accounts": [
+          {
+            "accountId": "ACC-7001",
+            "balanceCents": 1250000,
+            "displayName": "Helios Cargo Lines",
+            "standing": "GOOD"
+          },
+          {
+            "accountId": "ACC-7002",
+            "balanceCents": -2150000,
+            "displayName": "Vulcan Bulk Haulage",
+            "standing": "DELINQUENT"
+          },
+          {
+            "accountId": "ACC-7003",
+            "balanceCents": 890000,
+            "displayName": "Meridian Transit",
+            "standing": "GOOD"
+          },
+          {
+            "accountId": "ACC-7004",
+            "balanceCents": 310000,
+            "displayName": "Quickstep Couriers",
+            "standing": "GOOD"
+          },
+          {
+            "accountId": "ACC-7105",
+            "balanceCents": 461000,
+            "displayName": "Red Dust Noodle Bar",
+            "standing": "GOOD"
+          },
+          {
+            "accountId": "ACC-7106",
+            "balanceCents": 1180000,
+            "displayName": "Orbit Outfitters",
+            "standing": "GOOD"
+          },
+          {
+            "accountId": "ACC-7107",
+            "balanceCents": -96000,
+            "displayName": "Lagrange Coffee",
+            "standing": "DELINQUENT"
+          }
+        ],
+        "listDockings": [
+          {
+            "dockingId": 4019,
+            "etaUtc": "2026-07-14T06:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4020,
+            "etaUtc": "2026-07-15T09:30:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4021,
+            "etaUtc": "2026-07-17T14:30:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "dockingId": 4022,
+            "etaUtc": "2026-07-17T20:15:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "dockingId": 4023,
+            "etaUtc": "2026-07-16T11:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4024,
+            "etaUtc": "2026-07-17T08:45:00.000Z",
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4025,
+            "etaUtc": "2026-07-18T07:10:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "dockingId": 4026,
+            "etaUtc": "2026-07-19T10:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4027,
+            "etaUtc": "2026-07-18T02:20:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4028,
+            "etaUtc": "2026-07-19T16:30:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4029,
+            "etaUtc": "2026-07-20T05:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4030,
+            "etaUtc": "2026-07-18T09:55:00.000Z",
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ],
+        "listVessels": [
+          {
+            "maxCapacityKg": 300000,
+            "operatorName": "Helios Cargo Lines",
+            "vesselName": "Aurora Freight Nine",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "maxCapacityKg": 850000,
+            "operatorName": "Vulcan Bulk Haulage",
+            "vesselName": "Cinder Hauler",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "maxCapacityKg": 60000,
+            "operatorName": "Meridian Transit",
+            "vesselName": "Starlark",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "maxCapacityKg": 280000,
+            "operatorName": "Helios Cargo Lines",
+            "vesselName": "Pale Horizon",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "maxCapacityKg": 90000,
+            "operatorName": "Quickstep Couriers",
+            "vesselName": "Kestrel Run",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "maxCapacityKg": 880000,
+            "operatorName": "Vulcan Bulk Haulage",
+            "vesselName": "Iron Meridian",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "maxCapacityKg": 85000,
+            "operatorName": "Quickstep Couriers",
+            "vesselName": "Nightjar",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "maxCapacityKg": 65000,
+            "operatorName": "Meridian Transit",
+            "vesselName": "Solace",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  },
+  "POST /graphql #405afad4": {
+    "body": {
+      "data": {
+        "listDockings": [
+          {
+            "dockingId": 4019,
+            "etaUtc": "2026-07-14T06:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4020,
+            "etaUtc": "2026-07-15T09:30:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4021,
+            "etaUtc": "2026-07-17T14:30:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-88213"
+          },
+          {
+            "dockingId": 4022,
+            "etaUtc": "2026-07-17T20:15:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-49008"
+          },
+          {
+            "dockingId": 4023,
+            "etaUtc": "2026-07-16T11:00:00.000Z",
+            "statusCode": "DEPARTED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4024,
+            "etaUtc": "2026-07-17T08:45:00.000Z",
+            "statusCode": "ABORTED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4025,
+            "etaUtc": "2026-07-18T07:10:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-91102"
+          },
+          {
+            "dockingId": 4026,
+            "etaUtc": "2026-07-19T10:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-55871"
+          },
+          {
+            "dockingId": 4027,
+            "etaUtc": "2026-07-18T02:20:00.000Z",
+            "statusCode": "DOCKED",
+            "vesselRegistryNo": "VR-77045"
+          },
+          {
+            "dockingId": 4028,
+            "etaUtc": "2026-07-19T16:30:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-83555"
+          },
+          {
+            "dockingId": 4029,
+            "etaUtc": "2026-07-20T05:00:00.000Z",
+            "statusCode": "SCHEDULED",
+            "vesselRegistryNo": "VR-66320"
+          },
+          {
+            "dockingId": 4030,
+            "etaUtc": "2026-07-18T09:55:00.000Z",
+            "statusCode": "APPROACH",
+            "vesselRegistryNo": "VR-72410"
+          }
+        ],
+        "passengers": [
+          {
+            "cabinClass": "BUSINESS",
+            "clearanceStatus": "CLEARED",
+            "dockingNo": 4025,
+            "passengerId": 30011,
+            "passengerName": "Rosa Delgado"
+          },
+          {
+            "cabinClass": "ECONOMY",
+            "clearanceStatus": "CLEARED",
+            "dockingNo": 4025,
+            "passengerId": 30012,
+            "passengerName": "Ken Watanabe"
+          },
+          {
+            "cabinClass": "STATEROOM",
+            "clearanceStatus": "CLEARED",
+            "dockingNo": 4025,
+            "passengerId": 30013,
+            "passengerName": "Fatima Al-Sayed"
+          },
+          {
+            "cabinClass": "ECONOMY",
+            "clearanceStatus": "FLAGGED",
+            "dockingNo": 4025,
+            "passengerId": 30014,
+            "passengerName": "Marcus Boone"
+          },
+          {
+            "cabinClass": "ECONOMY",
+            "clearanceStatus": "CLEARED",
+            "dockingNo": 4025,
+            "passengerId": 30015,
+            "passengerName": "Lena Novak"
+          },
+          {
+            "cabinClass": "BUSINESS",
+            "clearanceStatus": "CLEARED",
+            "dockingNo": 4025,
+            "passengerId": 30016,
+            "passengerName": "Yusuf Kamara"
+          },
+          {
+            "cabinClass": "ECONOMY",
+            "clearanceStatus": "PENDING",
+            "dockingNo": 4025,
+            "passengerId": 30017,
+            "passengerName": "Ada Lindqvist"
+          },
+          {
+            "cabinClass": "ECONOMY",
+            "clearanceStatus": "PENDING",
+            "dockingNo": 4030,
+            "passengerId": 30018,
+            "passengerName": "Owen Hale"
+          },
+          {
+            "cabinClass": "BUSINESS",
+            "clearanceStatus": "PENDING",
+            "dockingNo": 4030,
+            "passengerId": 30019,
+            "passengerName": "Mei Fong"
+          },
+          {
+            "cabinClass": "ECONOMY",
+            "clearanceStatus": "CLEARED",
+            "dockingNo": 4025,
+            "passengerId": 30020,
+            "passengerName": "Silas Ward"
+          }
+        ]
+      }
+    },
+    "mimeType": "application/json",
+    "status": 200
+  }
+}
